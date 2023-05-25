@@ -14,15 +14,7 @@
     </div>
 
     <!-- Right side -->
-    <div>
-      <UButton
-        size="lg"
-        color="primary"
-        variant="solid"
-        label="Connect Wallet"
-        :trailing="false"
-      />
-    </div>
+    <ConnectWallet />
   </nav>
 </template>
 
