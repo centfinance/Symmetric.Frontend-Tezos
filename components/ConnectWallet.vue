@@ -15,7 +15,7 @@
 </template>
 
 <script lang="ts" setup>
-import { dappClient } from "~/utils/walletconnect";
+// import { dappClient } from "~/utils/walletconnect";
 // Here you can add logic for the Connect Wallet button
-const connected = dappClient().instance ? true : false;
+const connected = true;
 </script>
