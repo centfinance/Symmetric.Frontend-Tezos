@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col p-6">
+  <div class="flex flex-col">
     <div v-if="loading" class="text-lg">Loading...</div>
     <div v-else-if="error" class="text-red-500">
       An error occurred: {{ error.message }}
@@ -21,7 +21,7 @@
                 <q-badge
                   v-for="token in props.row.composition"
                   key="token"
-                  color="grey"
+                  color="black"
                   class="mx-1"
                 >
                   {{ token.symbol }}

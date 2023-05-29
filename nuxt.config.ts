@@ -1,5 +1,6 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
+  pages: true,
   modules: [
     // ...
     "@nuxtjs/apollo",
@@ -14,6 +15,11 @@ export default defineNuxtConfig({
       default: {
         httpEndpoint: "http://3.89.241.7/v1/graphql",
       },
+    },
+  },
+  quasar: {
+    extras: {
+      fontIcons: ["material-icons"],
     },
   },
 });

@@ -1,7 +1,7 @@
 <template>
   <div class="container mx-auto">
     <Navbar />
-    <PoolsList />
+    <NuxtPage />
   </div>
 </template>
 
