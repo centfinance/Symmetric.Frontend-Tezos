@@ -117,6 +117,7 @@ export const dappClient = () => {
     await client.setActiveAccount(account);
     return account;
   }
+
   async function CheckIfWalletConnected() {
     try {
       const client = await getDAppClient();
