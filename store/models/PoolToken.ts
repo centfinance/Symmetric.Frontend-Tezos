@@ -18,4 +18,15 @@ export class PoolToken extends Model {
       pool_token_id: this.number(0),
     };
   }
+
+  declare id: string;
+  declare address: string;
+  declare balance: number;
+  declare index: number;
+  declare name: string;
+  declare symbol: string;
+  declare decimals: number;
+  declare token_id: string;
+  declare pool_id: string;
+  declare pool_token_id: number;
 }

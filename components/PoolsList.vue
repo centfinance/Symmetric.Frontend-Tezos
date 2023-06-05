@@ -16,7 +16,7 @@
           separator="none"
         >
           <template v-slot:body="props">
-            <q-tr :props="props" @click="onPoolClick(props.row.address)">
+            <q-tr :props="props">
               <q-td key="composition" :props="props">
                 <q-badge
                   v-for="token in props.row.composition"
@@ -34,19 +34,28 @@
               <q-td key="total_swap_volume" :props="props">
                 {{ props.row.total_swap_volume }}
               </q-td>
+              <q-td>
+                <q-btn
+                  label="Manage"
+                  no-caps
+                  color="black"
+                  @click="openPoolDialog(props.row.address)"
+                />
+              </q-td>
             </q-tr>
           </template>
         </q-table>
       </div>
     </div>
+    <manage-pool @PoolDialogClose="closePoolDialog" :pool="selectedPool" />
   </div>
 </template>
 <script lang="ts" setup>
-import { graphql } from "~/gql";
-// import { Pool } from "~/store/models/Pool";
-import { PoolRepository } from "~/store/repositories/PoolRepository";
-
-// const pools = computed(() => useRepo(Pool).all())
+defineProps<{
+  poolsList?: unknown[];
+  pending?: boolean;
+  error?: Error | null;
+}>();
 
 const columns = [
   {
@@ -70,52 +79,18 @@ const columns = [
   },
 ];
 
-const poolsListQuery = graphql(`
-  query GetPool {
-    indexer_pool(order_by: { total_liquidity: desc }) {
-      holders_count
-      swaps_count
-      swap_enabled
-      address
-      factory
-      id
-      owner
-      create_time
-      swap_fee
-      total_liquidity
-      total_shares
-      total_swap_fee
-      total_swap_volume
-      name
-      pool_type
-      symbol
-      tokens_list
-      pool_tokens {
-        address
-        balance
-        index
-        decimals
-        name
-        symbol
-        token_id
-        weight
-        id
-        pool_id
-        pool_token_id
-      }
-    }
-  }
-`);
-const poolsList = computed(() => useRepo(PoolRepository).getPoolList());
-
-const { pending, data, error } = await useAsyncQuery(poolsListQuery);
-
-if (data.value && data.value.indexer_pool) {
-  useRepo(PoolRepository).store(data.value);
-}
-
 const onPoolClick = (address: string) => {
   const router = useRouter();
   router.push(`/pools/${address}`);
+};
+
+const selectedPool = ref<string | null>(null);
+
+const openPoolDialog = (pool: string) => {
+  selectedPool.value = pool;
+};
+
+const closePoolDialog = () => {
+  selectedPool.value = null;
 };
 </script>

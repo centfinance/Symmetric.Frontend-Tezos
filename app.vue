@@ -1,5 +1,5 @@
 <template>
-  <div class="container mx-auto">
+  <div class="q-pa-md body-dark">
     <Navbar />
     <NuxtPage />
   </div>

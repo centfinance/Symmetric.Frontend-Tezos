@@ -3,16 +3,26 @@ import { nodePolyfills } from "vite-plugin-node-polyfills";
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   pages: true,
+  tailwindcss: {
+    injectPosition: "first",
+    config: {
+      content: [],
+      // corePlugins: {
+      //   preflight: false,
+      // },
+    },
+  },
   modules: [
     // ...
+    "nuxt-quasar-ui",
     "@nuxtjs/apollo",
     "nuxt-headlessui",
     "@nuxthq/ui",
     "@pinia/nuxt",
     "@pinia-orm/nuxt",
-    "nuxt-quasar-ui",
   ],
   ssr: false,
+
   apollo: {
     clients: {
       default: {

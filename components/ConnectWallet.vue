@@ -1,6 +1,6 @@
 <template>
   <div v-if="connected">
-    <UDropdown dark :items="items" :popper="{ placement: 'bottom-start' }">
+    <UDropdown :items="items" :popper="{ placement: 'bottom-start' }">
       <UButton
         icon="i-heroicons-adjustments-vertical"
         size="xl"
@@ -27,7 +27,7 @@ import { dappClient } from "~/utils/walletconnect";
 
 const client = await dappClient().getDAppClient();
 const active = await client.getActiveAccount();
-const address = `${active?.address.substring(0, 4)}...${active?.address.slice(
+const address = `${active?.address.substring(0, 7)}...${active?.address.slice(
   32
 )}`;
 const connected = (await client.getActiveAccount()) ? true : false;

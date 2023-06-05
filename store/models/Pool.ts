@@ -23,4 +23,6 @@ export class Pool extends Model {
       pool_tokens: this.hasMany(PoolToken, "pool_id"),
     };
   }
+
+  declare pool_tokens: PoolToken[];
 }
