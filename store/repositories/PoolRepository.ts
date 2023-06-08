@@ -37,6 +37,7 @@ export class PoolRepository extends Repository {
           weight: token.weight,
           pool_id: token.pool_id,
           pool_token_id: token.pool_token_id,
+          FA2: token.token ? token.token.fa2 : false,
         };
       });
       poolTokens.push(...tokens);

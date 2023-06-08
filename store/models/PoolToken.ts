@@ -16,6 +16,7 @@ export class PoolToken extends Model {
       weight: this.number(0),
       pool_id: this.string(""),
       pool_token_id: this.number(0),
+      FA2: this.boolean(false),
     };
   }
 
@@ -29,4 +30,5 @@ export class PoolToken extends Model {
   declare token_id: string;
   declare pool_id: string;
   declare pool_token_id: number;
+  declare FA2: boolean;
 }

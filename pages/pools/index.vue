@@ -52,6 +52,9 @@ const poolsListQuery = graphql(`
         id
         pool_id
         pool_token_id
+        token {
+          fa2
+        }
       }
     }
   }

@@ -42,10 +42,15 @@
               <!-- <template v-slot:hint
               >${{ token.amount * token.priceRate }}</template
             > -->
-              <!-- 
-        <template v-slot:after>
-          <q-btn round dense flat icon="send" />
-        </template> -->
+
+              <template v-slot:after>
+                <q-btn color="deep-orange" outline>
+                  <div class="row items-center no-wrap">
+                    <q-icon left name="wallet" />
+                    <div class="text-center">34.567 {{ token.symbol }}</div>
+                  </div>
+                </q-btn>
+              </template>
             </q-input>
             <q-btn
               color="black"
@@ -79,7 +84,6 @@ const open = computed(() => {
 });
 
 const pool = computed(() => {
-  console.log(props.pool);
   if (props.pool) {
     return useRepo(Pool).with("pool_tokens").find(props.pool);
   }
@@ -107,13 +111,35 @@ const addLiquidity = async () => {
     tokens.value!.map((t) => [t.index, BigInt(t.amount)])
   );
   const params = request?.toTransferParams();
+  const approvals = pool.value?.pool_tokens.map((t) => {
+    return {
+      type: t.FA2 ? 2 : 1,
+      value: {
+        tokenContract: t.address,
+        tokenId: t.FA2 ? t.pool_token_id : undefined,
+        allowance: t.FA2 ? undefined : t.amount,
+      },
+    };
+  }) as any[];
+
+  const approveCalls = approveData(
+    approvals,
+    "KT1N5qYdthynXLfGbteRVHgKy4m6q2NGjt57"
+  );
 
   const contractCall: WalletParamsWithKind = {
     kind: OpKind.TRANSACTION,
     ...params!,
   };
+  const transactions = [];
 
-  const batch = tezos.wallet.batch([contractCall]);
+  transactions.push(...approveCalls.fa1.revokes);
+  transactions.push(...approveCalls.fa1.approves);
+  transactions.push(...approveCalls.fa2.approves);
+  transactions.push(contractCall);
+  transactions.push(...approveCalls.fa2.revokes);
+
+  const batch = tezos.wallet.batch(transactions);
 
   console.log(batch);
 };

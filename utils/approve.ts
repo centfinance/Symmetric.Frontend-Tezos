@@ -4,6 +4,48 @@ import { TezosOperationType } from "@airgap/beacon-sdk";
 const approveEntrypoint = "approve";
 const updateOperatorsEntrypoint = "update_operators";
 
+import { TezosToolkit } from "@taquito/taquito";
+
+// async function checkAllowanceOrOperator(
+//   tezos: TezosToolkit,
+//   contractAddress: string,
+//   ownerAddress: string,
+//   spenderAddress: string,
+//   tokenId?: number,
+//   tokenType?: "FA1.2" | "FA2"
+// ): Promise<string> {
+//   try {
+//     const contract = await tezos.contract.at(contractAddress);
+//     const token = contract.views;
+
+//     if (tokenType === "FA1.2") {
+//       const allowance = await token.allowances.get({
+//         owner: ownerAddress,
+//         spender: spenderAddress,
+//       });
+//       return allowance.toString();
+//     } else if (tokenType === "FA2") {
+//       if (tokenId === undefined) {
+//         return "tokenId is required for FA2 tokens.";
+//       }
+
+//       const isOperator = await token.isOperator({
+//         owner: ownerAddress,
+//         operator: spenderAddress,
+//         token_id: tokenId,
+//       });
+//       return isOperator
+//         ? "The address is an operator."
+//         : "The address is not an operator.";
+//     } else {
+//       return "Unsupported token standard.";
+//     }
+//   } catch (error) {
+//     console.error("An error occurred:", error);
+//     return "An error occurred.";
+//   }
+// }
+
 export function approveData(tokenApprovals: any[], spender: string) {
   if (!checkAddress(spender)) {
     throw new Error(`invalid spender address: ${spender}`);
