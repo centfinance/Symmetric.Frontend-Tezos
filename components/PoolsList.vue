@@ -47,7 +47,11 @@
         </q-table>
       </div>
     </div>
-    <manage-pool @PoolDialogClose="closePoolDialog" :pool="selectedPool" />
+    <manage-pool
+      v-if="selectedPool"
+      @PoolDialogClose="closePoolDialog"
+      :pool="selectedPool"
+    />
   </div>
 </template>
 <script lang="ts" setup>

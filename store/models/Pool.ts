@@ -1,4 +1,5 @@
 import { Model } from "pinia-orm";
+import numbro from "numbro";
 import { PoolToken } from "./PoolToken";
 
 export class Pool extends Model {
@@ -23,6 +24,20 @@ export class Pool extends Model {
       pool_tokens: this.hasMany(PoolToken, "pool_id"),
     };
   }
-
   declare pool_tokens: PoolToken[];
+
+  async getUserBalances(user: string) {
+    const tokens = this.pool_tokens.map((t) => {
+      return {
+        contract: t.address,
+        tokenId: t.pool_token_id,
+        index: t.index,
+      };
+    });
+    const balances = await getBalanceFromTzkt(
+      this.pool_tokens.map((t) => t.address),
+      this.pool_tokens.map((t) => t.pool_token_id),
+      user
+    );
+  }
 }

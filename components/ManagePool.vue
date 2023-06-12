@@ -3,7 +3,7 @@
     <q-dialog dark v-model="open">
       <q-card dark flat>
         <q-card-section class="row items-center q-pb-none">
-          <div class="text-h6">Add Liquidity</div>
+          <div class="text-h6">Manage Pool</div>
           <q-space />
           <q-btn
             icon="close"
@@ -14,6 +14,21 @@
           />
         </q-card-section>
         <q-card-section>
+          <q-btn-toggle
+            v-model="add"
+            spread
+            no-caps
+            toggle-color="orange"
+            color="white"
+            text-color="black"
+            :options="[
+              { label: 'Add Liquidity', value: true },
+              { label: 'Remove Liquidity', value: false },
+            ]"
+          />
+        </q-card-section>
+        <join-pool v-if="open && add" :pool="props.pool" :balances="balances" />
+        <!-- <q-card-section v-if="open && add">
           <div class="q-pa-md">
             <q-input
               v-for="token in tokens"
@@ -25,9 +40,6 @@
               v-model="token.amount"
               input-class="focus:ring-0 focus:ring-offset-0"
             >
-              <!-- <template v-slot:before>
-              <div class="bg-black">{{ token.symbol }}</div>
-            </template> -->
 
               <template v-slot:before>
                 <div class="bg-black h-full q-pa-sm">
@@ -39,15 +51,19 @@
                 <div class="text-sm">${{ token.amount * token.priceRate }}</div>
               </template>
 
-              <!-- <template v-slot:hint
-              >${{ token.amount * token.priceRate }}</template
-            > -->
 
               <template v-slot:after>
                 <q-btn color="deep-orange" outline>
                   <div class="row items-center no-wrap">
                     <q-icon left name="wallet" />
-                    <div class="text-center">34.567 {{ token.symbol }}</div>
+                    <div class="text-center">
+                      {{
+                        formatBalance(
+                          balances[`${token.contract}${token.tokenId}`]
+                        )
+                      }}
+                      {{ token.symbol }}
+                    </div>
                   </div>
                 </q-btn>
               </template>
@@ -59,7 +75,7 @@
               @click="addLiquidity"
             />
           </div>
-        </q-card-section>
+        </q-card-section> -->
       </q-card>
     </q-dialog>
   </div>
@@ -67,14 +83,16 @@
 
 <script lang="ts" setup>
 import { OpKind, WalletParamsWithKind } from "@taquito/taquito";
+import { BigNumber } from "bignumber.js";
 import { Pool } from "~/store/models/Pool";
 
 const props = defineProps<{
   pool?: string | null;
 }>();
 
+const add = ref(true);
+
 const open = computed(() => {
-  console.log(props.pool);
   return props.pool ? true : false;
 });
 
@@ -94,25 +112,26 @@ let tokens = computed(() =>
       index: t.index,
       priceRate: 1,
       amount: 0,
+      balance: "0",
+      contract: t.address,
+      tokenId: t.pool_token_id,
     };
   })
 );
 const tezos = await dappClient().tezos();
 const userAddress = await tezos.wallet.pkh();
 
-const balanceRequests = pool.value?.pool_tokens?.map((t) => {
-  return getBalanceFromTzkt(
-    t.address,
-    t.FA2 ? t.pool_token_id : 0,
-    t.FA2,
-    userAddress,
-    t.symbol
-  );
-});
+const balances = ref();
 
-// const balances = await Promise.all(balanceRequests!);
+balances.value = (
+  await getBalanceFromTzkt(
+    tokens.value!.map((t) => t.contract),
+    tokens.value!.map((t) => t.tokenId),
+    userAddress
+  )
+).balances;
 
-console.log(balanceRequests);
+console.log(balances);
 
 const addLiquidity = async () => {
   const request = await createJoinRequest(

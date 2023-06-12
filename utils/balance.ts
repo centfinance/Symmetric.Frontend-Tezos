@@ -33,39 +33,48 @@ export const getTzktTokenData = async (
  * @param tokenSymbol - Symbol of the token (optional)
  */
 export const getBalanceFromTzkt = async (
-  tokenContract: string,
-  tokenId: number | undefined,
-  FA2: boolean,
-  userTezosAddress: string,
-  tokenSymbol?: string
+  tokens: any[],
+  userTezosAddress: string
 ): Promise<any> => {
   try {
-    if (
-      !tokenContract ||
-      tokenContract === "" ||
-      !FA2 ||
-      !userTezosAddress ||
-      userTezosAddress === ""
-    ) {
-      throw new Error("Invalid or empty parameters");
-    }
-    let symbol: string = tokenSymbol || "";
-    let userBalance = new BigNumber(0);
+    // if (
+    //   !tokenContract ||
+    //   tokenContract === "" ||
+    //   !FA2 ||
+    //   !userTezosAddress ||
+    //   userTezosAddress === ""
+    // ) {
+    //   throw new Error("Invalid or empty parameters");
+    // }
 
     const balanceResponse = await getTzktTokenData(
-      `/balances?account=${userTezosAddress}&token.contract=${tokenContract}${
-        FA2 ? `&token.tokenId=${tokenId || 0}` : ""
-      }`
+      `/balances?account=${userTezosAddress}&token.contract.in=${tokens
+        .map((t) => t.contract)
+        .toString()}&token.tokenId.in=${tokens
+        .map((t) => t.tokemId)
+        .toString()}`
     );
+
     const balanceData = balanceResponse.data;
     if (balanceData.length <= 0) {
       return {
         success: true,
-        identifier: symbol,
-        balance: userBalance,
+        balances: [0],
       };
     }
 
+    const balances: any = {};
+    balanceData.forEach(
+      (b: any) =>
+        (balances[`${b.token.contract.address}${b.token.tokenId}`] = BigNumber(
+          b.balance
+        ))
+    );
+
+    return {
+      success: true,
+      balances: balances,
+    };
     // const tokenDataFromConfig = getTokenDataByAddress(tokenContract, tokenId);
 
     // // First check if token metadata exists for the token in the response.
@@ -104,8 +113,7 @@ export const getBalanceFromTzkt = async (
     console.log(error);
     return {
       success: false,
-      identifier: tokenSymbol || "",
-      balance: new BigNumber(0),
+      balances: [new BigNumber(0)],
       error: error.message,
     };
   }
