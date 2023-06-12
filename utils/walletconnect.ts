@@ -56,7 +56,7 @@ import type { BeaconWallet } from "@taquito/beacon-wallet";
 // export const walletNetwork = Config.WALLET_NETWORK;
 // export const configName = Config.NAME;
 // export const tzktNode = Config.TZKT_NODES[connectedNetwork];
-// export const publicTzktNode = Config.PUBLIC_TZKT_NODES[connectedNetwork];
+export const publicTzktNode = "https://api.ghostnet.tzkt.io/";
 // export const voteEscrowAddress = Config.VOTE_ESCROW[connectedNetwork];
 // export const voterAddress = Config.VOTER[connectedNetwork];
 // export const veSwapAddress = Config.VE_SWAP[connectedNetwork];

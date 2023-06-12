@@ -3,7 +3,7 @@
     <q-dialog dark v-model="open">
       <q-card dark flat>
         <q-card-section class="row items-center q-pb-none">
-          <div class="text-h6">Close icon</div>
+          <div class="text-h6">Add Liquidity</div>
           <q-space />
           <q-btn
             icon="close"
@@ -66,12 +66,7 @@
 </template>
 
 <script lang="ts" setup>
-import { TezosOperationType } from "@airgap/beacon-sdk";
-import {
-  OpKind,
-  WalletParamsWithKind,
-  WalletTransferParams,
-} from "@taquito/taquito";
+import { OpKind, WalletParamsWithKind } from "@taquito/taquito";
 import { Pool } from "~/store/models/Pool";
 
 const props = defineProps<{
@@ -102,9 +97,24 @@ let tokens = computed(() =>
     };
   })
 );
+const tezos = await dappClient().tezos();
+const userAddress = await tezos.wallet.pkh();
+
+const balanceRequests = pool.value?.pool_tokens?.map((t) => {
+  return getBalanceFromTzkt(
+    t.address,
+    t.FA2 ? t.pool_token_id : 0,
+    t.FA2,
+    userAddress,
+    t.symbol
+  );
+});
+
+// const balances = await Promise.all(balanceRequests!);
+
+console.log(balanceRequests);
 
 const addLiquidity = async () => {
-  const tezos = await dappClient().tezos();
   const request = await createJoinRequest(
     tezos,
     pool.value!.address,
