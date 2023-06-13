@@ -1,4 +1,6 @@
 import { Model } from "pinia-orm";
+import numbro from "numbro";
+import { BigNumber } from "bignumber.js";
 
 export class PoolToken extends Model {
   static entity = "pool_tokens";
@@ -17,6 +19,8 @@ export class PoolToken extends Model {
       pool_id: this.string(""),
       pool_token_id: this.number(0),
       FA2: this.boolean(false),
+      userBalance: this.string("0"),
+      icon: this.string(null),
     };
   }
 
@@ -31,4 +35,19 @@ export class PoolToken extends Model {
   declare pool_id: string;
   declare pool_token_id: number;
   declare FA2: boolean;
+  declare userBalance: string;
+  declare icon: string;
+
+  normalizedBalance(): string {
+    return BigNumber(this.userBalance)
+      .dividedBy(10 ** this.decimals)
+      .toString();
+  }
+
+  formatBalance(): string {
+    return numbro(this.normalizedBalance()).format({
+      average: true,
+      totalLength: 6,
+    });
+  }
 }

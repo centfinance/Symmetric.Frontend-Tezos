@@ -37,78 +37,42 @@ export const getBalanceFromTzkt = async (
   userTezosAddress: string
 ): Promise<any> => {
   try {
-    // if (
-    //   !tokenContract ||
-    //   tokenContract === "" ||
-    //   !FA2 ||
-    //   !userTezosAddress ||
-    //   userTezosAddress === ""
-    // ) {
-    //   throw new Error("Invalid or empty parameters");
-    // }
-
     const balanceResponse = await getTzktTokenData(
       `/balances?account=${userTezosAddress}&token.contract.in=${tokens
         .map((t) => t.contract)
         .toString()}&token.tokenId.in=${tokens
-        .map((t) => t.tokemId)
+        .map((t) => t.tokenId)
         .toString()}`
     );
 
     const balanceData = balanceResponse.data;
     if (balanceData.length <= 0) {
       return {
-        success: true,
+        success: false,
         balances: [0],
       };
     }
 
-    const balances: any = {};
-    balanceData.forEach(
-      (b: any) =>
-        (balances[`${b.token.contract.address}${b.token.tokenId}`] = BigNumber(
-          b.balance
-        ))
-    );
+    const balances = balanceData.map((b: any) => {
+      const id = tokens.find(
+        (t) =>
+          t.contract == b.token.contract.address &&
+          t.tokenId === Number(b.token.tokenId)
+      ).id;
+
+      if (id) {
+        return {
+          id: id as string,
+          icon: (b.token.metadata.thumbnailUri as string) || null,
+          userBalance: b.balance as string,
+        };
+      }
+    });
 
     return {
       success: true,
       balances: balances,
     };
-    // const tokenDataFromConfig = getTokenDataByAddress(tokenContract, tokenId);
-
-    // // First check if token metadata exists for the token in the response.
-    // if (
-    //   balanceData[0].token.metadata &&
-    //   balanceData[0].token.metadata.decimals
-    // ) {
-    //   symbol = tokenSymbol || balanceData[0].token.metadata.symbol;
-    //   const tokenDecimals = new BigNumber(
-    //     balanceData[0].token.metadata.decimals
-    //   );
-    //   const decimalMultiplier = new BigNumber(10).pow(tokenDecimals);
-    //   userBalance = new BigNumber(balanceData[0].balance || 0).dividedBy(
-    //     decimalMultiplier
-    //   );
-    // } else {
-    //   // Check if token data exists in local config if not found in tzkt response.
-    //   if (tokenDataFromConfig) {
-    //     symbol = tokenSymbol || tokenDataFromConfig.symbol;
-    //     const tokenDecimals = new BigNumber(tokenDataFromConfig.decimals);
-    //     const decimalMultiplier = new BigNumber(10).pow(tokenDecimals);
-    //     userBalance = new BigNumber(balanceData[0].balance || 0).dividedBy(
-    //       decimalMultiplier
-    //     );
-    //   } else {
-    //     throw new Error("Decimals not found for the selected token.");
-    //   }
-    // }
-
-    // return {
-    //   success: true,
-    //   identifier: symbol,
-    //   balance: userBalance,
-    // };
   } catch (error: any) {
     console.log(error);
     return {

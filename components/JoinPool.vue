@@ -9,7 +9,7 @@
           outlined
           type="number"
           bottom-slots
-          v-model="token.amount"
+          v-model="amount"
           input-class="focus:ring-0 focus:ring-offset-0"
         >
           <!-- <template v-slot:before>
@@ -17,28 +17,40 @@
             </template> -->
 
           <template v-slot:before>
-            <div class="bg-black h-full q-pa-sm">
-              {{ token.symbol }}
-            </div>
+            <!-- <div class="bg-black h-full q-pa-sm"> -->
+            <q-avatar size="60px">
+              <q-img
+                :src="poolTokens[token.index].icon"
+                spinner-color="white"
+              />
+            </q-avatar>
+            <!-- </div> -->
           </template>
 
           <template v-slot:append>
-            <div class="text-sm">${{ token.amount * token.priceRate }}</div>
+            <div class="text-sm">
+              {{ token.symbol }}
+            </div>
+            <div class="text-sm">
+              ${{ Number(token.amount) * token.priceRate }}
+            </div>
           </template>
 
           <!-- <template v-slot:hint
               >${{ token.amount * token.priceRate }}</template
             > -->
           <template v-slot:after>
-            <q-btn color="orange" outline>
+            <q-btn
+              color="orange"
+              outline
+              @click="
+                () => (amount = poolTokens[token.index].normalizedBalance())
+              "
+            >
               <div class="row items-center no-wrap">
                 <q-icon left name="wallet" />
                 <div class="text-center">
-                  {{
-                    formatBalance(
-                      props.balances[`${token.contract}${token.tokenId}`]
-                    )
-                  }}
+                  {{ poolTokens[token.index].formatBalance() }}
                   {{ token.symbol }}
                 </div>
               </div>
@@ -61,6 +73,7 @@ import { OpKind, WalletParamsWithKind } from "@taquito/taquito";
 import { BigNumber } from "bignumber.js";
 
 import { Pool } from "~/store/models/Pool";
+import { PoolToken } from "~/store/models/PoolToken";
 
 const props = defineProps<{
   pool?: string | null;
@@ -73,28 +86,27 @@ const pool = computed(() => {
   }
   return null;
 });
+const poolTokens = computed(() => {
+  return useRepo(PoolToken)
+    .where("pool_id", pool.value?.id)
+    .orderBy("index")
+    .get();
+});
 
 let tokens = computed(() =>
-  pool.value?.pool_tokens.map((t) => {
+  poolTokens.value?.map((t) => {
     return {
       id: t.id,
       symbol: t.symbol,
       decimal: t.decimals,
       index: t.index,
       priceRate: 1,
-      amount: 0,
-      contract: t.address,
-      tokenId: t.pool_token_id,
+      amount: "0",
     };
   })
 );
 
-const formatBalance = (b: BigNumber | undefined) => {
-  if (b) {
-    return b.dividedBy(BigNumber(10).modulo(10, 18)).toFormat(3).toString();
-  }
-  return "0";
-};
+const amount = ref("0");
 
 const addLiquidity = async () => {
   const tezos = await dappClient().tezos();

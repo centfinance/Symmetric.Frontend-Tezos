@@ -82,9 +82,8 @@
 </template>
 
 <script lang="ts" setup>
-import { OpKind, WalletParamsWithKind } from "@taquito/taquito";
-import { BigNumber } from "bignumber.js";
 import { Pool } from "~/store/models/Pool";
+import { PoolRepository } from "~/store/repositories/PoolRepository";
 
 const props = defineProps<{
   pool?: string | null;
@@ -103,75 +102,12 @@ const pool = computed(() => {
   return null;
 });
 
-let tokens = computed(() =>
-  pool.value?.pool_tokens.map((t) => {
-    return {
-      id: t.id,
-      symbol: t.symbol,
-      decimal: t.decimals,
-      index: t.index,
-      priceRate: 1,
-      amount: 0,
-      balance: "0",
-      contract: t.address,
-      tokenId: t.pool_token_id,
-    };
-  })
-);
 const tezos = await dappClient().tezos();
 const userAddress = await tezos.wallet.pkh();
 
-const balances = ref();
-
-balances.value = (
-  await getBalanceFromTzkt(
-    tokens.value!.map((t) => t.contract),
-    tokens.value!.map((t) => t.tokenId),
-    userAddress
-  )
-).balances;
-
-console.log(balances);
-
-const addLiquidity = async () => {
-  const request = await createJoinRequest(
-    tezos,
-    pool.value!.address,
-    tokens.value!.map((t) => [t.index, BigInt(t.amount)])
-  );
-  const params = request?.toTransferParams();
-  const approvals = pool.value?.pool_tokens.map((t) => {
-    return {
-      type: t.FA2 ? 2 : 1,
-      value: {
-        tokenContract: t.address,
-        tokenId: t.FA2 ? t.pool_token_id : undefined,
-        allowance: t.FA2 ? undefined : t.amount,
-      },
-    };
-  }) as any[];
-
-  const approveCalls = approveData(
-    approvals,
-    "KT1N5qYdthynXLfGbteRVHgKy4m6q2NGjt57"
-  );
-
-  const contractCall: WalletParamsWithKind = {
-    kind: OpKind.TRANSACTION,
-    ...params!,
-  };
-  const transactions = [];
-
-  transactions.push(...approveCalls.fa1.revokes);
-  transactions.push(...approveCalls.fa1.approves);
-  transactions.push(...approveCalls.fa2.approves);
-  transactions.push(contractCall);
-  transactions.push(...approveCalls.fa2.revokes);
-
-  const batch = tezos.wallet.batch(transactions);
-
-  console.log(batch);
-};
-
-console.log(tokens);
+const balances = ref(
+  pool.value
+    ? await useRepo(PoolRepository).updateUserBalances(pool.value, userAddress)
+    : null
+);
 </script>

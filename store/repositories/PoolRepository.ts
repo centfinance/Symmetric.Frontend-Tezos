@@ -68,4 +68,10 @@ export class PoolRepository extends Repository {
       };
     });
   }
+
+  async updateUserBalances(pool: Pool, user: string) {
+    const balances = await pool.getUserBalances(user);
+    console.log(balances);
+    this.repo(PoolToken).save(balances);
+  }
 }

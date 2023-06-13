@@ -1,5 +1,5 @@
 import { Model } from "pinia-orm";
-import numbro from "numbro";
+
 import { PoolToken } from "./PoolToken";
 
 export class Pool extends Model {
@@ -31,13 +31,16 @@ export class Pool extends Model {
       return {
         contract: t.address,
         tokenId: t.pool_token_id,
-        index: t.index,
+        id: t.id,
       };
     });
-    const balances = await getBalanceFromTzkt(
-      this.pool_tokens.map((t) => t.address),
-      this.pool_tokens.map((t) => t.pool_token_id),
-      user
-    );
+
+    const balances = await getBalanceFromTzkt(tokens, user);
+
+    if (balances.success) {
+      return balances.balances;
+    }
+
+    return null;
   }
 }
