@@ -18,7 +18,7 @@
 
           <template v-slot:before>
             <!-- <div class="bg-black h-full q-pa-sm"> -->
-            <q-avatar size="60px">
+            <q-avatar size="55px">
               <q-img
                 :src="poolTokens[token.index].icon"
                 spinner-color="white"
@@ -28,9 +28,6 @@
           </template>
 
           <template v-slot:append>
-            <div class="text-sm">
-              {{ token.symbol }}
-            </div>
             <div class="text-sm">
               ${{ Number(token.amount) * token.priceRate }}
             </div>
@@ -50,8 +47,9 @@
               <div class="row items-center no-wrap">
                 <q-icon left name="wallet" />
                 <div class="text-center">
-                  {{ poolTokens[token.index].formatBalance() }}
                   {{ token.symbol }}
+                  <br />
+                  {{ poolTokens[token.index].formatBalance() }}
                 </div>
               </div>
             </q-btn>
@@ -59,8 +57,11 @@
         </q-input>
         <q-btn
           color="black"
+          spread
+          no-caps
           text-color="white"
           label="Add Liquidity"
+          class="full-width"
           @click="addLiquidity"
         />
       </div>
@@ -77,7 +78,6 @@ import { PoolToken } from "~/store/models/PoolToken";
 
 const props = defineProps<{
   pool?: string | null;
-  balances: any;
 }>();
 
 const pool = computed(() => {

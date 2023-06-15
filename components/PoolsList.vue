@@ -17,16 +17,29 @@
         >
           <template v-slot:body="props">
             <q-tr :props="props">
-              <q-td key="composition" :props="props">
-                <q-badge
-                  v-for="token in props.row.composition"
-                  key="token"
-                  color="black"
-                  class="mx-1"
+              <q-td :props="props">
+                <q-avatar
+                  v-for="(t, i) in props.row.icons"
+                  :key="i"
+                  size="40px"
+                  class="overlapping"
+                  :style="`left: ${i * 25}px`"
                 >
-                  {{ token.symbol }}
-                  {{ token.weight }}
-                </q-badge>
+                  <q-img :src="props.row.icons[i]" />
+                </q-avatar>
+              </q-td>
+              <q-td key="composition" :props="props">
+                <div class="flex flex-wrap gap-y-1">
+                  <q-badge
+                    v-for="token in props.row.composition"
+                    key="token"
+                    color="black"
+                    class="mx-1"
+                  >
+                    {{ token.symbol }}
+                    {{ token.weight }}
+                  </q-badge>
+                </div>
               </q-td>
               <q-td key="total_liquidity" :props="props">
                 {{ props.row.total_liquidity }}
@@ -55,12 +68,21 @@
   </div>
 </template>
 <script lang="ts" setup>
-defineProps<{
-  poolsList?: unknown[];
+type PoolsList = {
+  composition: { symbol: string; weight: string }[];
+  total_liquidity: number;
+  total_swap_volume: number;
+  address: string;
+  icons: string[];
+}[];
+
+const props = defineProps<{
+  poolsList?: PoolsList;
   pending?: boolean;
   error?: Error | null;
 }>();
 
+console.log(props.poolsList);
 const columns = [
   {
     name: "composition",

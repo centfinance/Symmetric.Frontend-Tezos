@@ -1,6 +1,8 @@
 import { Model } from "pinia-orm";
 
 import { PoolToken } from "./PoolToken";
+import numbro from "numbro";
+import { BigNumber } from "bignumber.js";
 
 export class Pool extends Model {
   static entity = "pools";
@@ -22,6 +24,7 @@ export class Pool extends Model {
       total_swap_fee: this.number(0),
       total_liquidity: this.number(0),
       pool_tokens: this.hasMany(PoolToken, "pool_id"),
+      userLPBalance: this.string(null),
     };
   }
   declare pool_tokens: PoolToken[];
@@ -42,5 +45,26 @@ export class Pool extends Model {
     }
 
     return null;
+  }
+
+  async getUserLPBalance(user: string) {
+    const result = await getLPBalance(this.address, user);
+    if (result.success) {
+      return result.balance.toString();
+    }
+    return null;
+  }
+
+  normalizedLPBalance(): string {
+    return BigNumber(this.userLPBalance || 0)
+      .dividedBy(10 ** 18)
+      .toString();
+  }
+
+  formatLPBalance() {
+    return numbro(this.normalizedLPBalance()).format({
+      average: true,
+      totalLength: 6,
+    });
   }
 }

@@ -1,4 +1,5 @@
 import axios from "axios";
+import { TezosToolkit } from "@taquito/taquito";
 import { BigNumber } from "bignumber.js";
 import { getRpcNode, publicTzktNode } from "./walletconnect";
 
@@ -79,6 +80,32 @@ export const getBalanceFromTzkt = async (
       success: false,
       balances: [new BigNumber(0)],
       error: error.message,
+    };
+  }
+};
+
+export const getLPBalance = async (
+  pool: string,
+  user: string
+): Promise<{ success: boolean; balance: BigNumber }> => {
+  try {
+    const Tezos = new TezosToolkit(getRpcNode());
+
+    const contract = await Tezos.contract.at(pool);
+
+    const result = await contract.contractViews
+      .getBalance(user)
+      .executeView({ viewCaller: user });
+
+    return {
+      success: true,
+      balance: result,
+    };
+  } catch (error: any) {
+    console.log(`Error: ${JSON.stringify(error, null, 2)}`);
+    return {
+      success: false,
+      balance: BigNumber(0),
     };
   }
 };

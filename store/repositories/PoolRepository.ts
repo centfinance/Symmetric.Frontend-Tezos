@@ -65,13 +65,22 @@ export class PoolRepository extends Repository {
         total_liquidity: pool.total_liquidity,
         total_swap_volume: pool.total_swap_volume,
         address: pool.address,
+        icons: pool.pool_tokens.map((t) => t.icon),
       };
     });
   }
 
   async updateUserBalances(pool: Pool, user: string) {
     const balances = await pool.getUserBalances(user);
-    console.log(balances);
     this.repo(PoolToken).save(balances);
+  }
+
+  async updateUserLPBalance(pool: Pool, user: string) {
+    const balance = await pool.getUserLPBalance(user);
+    console.log(typeof balance);
+    this.save({
+      id: pool.id,
+      userLPBalance: balance,
+    });
   }
 }
