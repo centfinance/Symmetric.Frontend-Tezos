@@ -63,4 +63,6 @@ pool.value
 pool.value
   ? await useRepo(PoolRepository).updateUserLPBalance(pool.value, userAddress)
   : null;
+
+pool.value ? await useRepo(PoolRepository).updatePoolShares(pool.value) : null;
 </script>

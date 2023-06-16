@@ -19,6 +19,7 @@ export class Pool extends Model {
       name: this.string(""),
       symbol: this.string(""),
       pool_type: this.string(""),
+      pool_shares: this.string("0"),
       swap_fee: this.number(0),
       total_swap_volume: this.number(0),
       total_swap_fee: this.number(0),
@@ -51,6 +52,14 @@ export class Pool extends Model {
     const result = await getLPBalance(this.address, user);
     if (result.success) {
       return result.balance.toString();
+    }
+    return null;
+  }
+
+  async getPoolShares() {
+    const result = await getPoolShares(this.address);
+    if (result.success) {
+      return result.shares.toString();
     }
     return null;
   }

@@ -77,10 +77,17 @@ export class PoolRepository extends Repository {
 
   async updateUserLPBalance(pool: Pool, user: string) {
     const balance = await pool.getUserLPBalance(user);
-    console.log(typeof balance);
     this.save({
       id: pool.id,
       userLPBalance: balance,
+    });
+  }
+
+  async updatePoolShares(pool: Pool) {
+    const shares = await pool.getPoolShares();
+    this.save({
+      id: pool.id,
+      pool_shares: shares,
     });
   }
 }

@@ -109,3 +109,43 @@ export const getLPBalance = async (
     };
   }
 };
+
+export const getPoolShares = async (pool: string) => {
+  try {
+    const Tezos = new TezosToolkit(getRpcNode());
+
+    const contract = await Tezos.contract.at(pool);
+
+    const result = await contract.contractViews
+      .getTotalSupply()
+      .executeView({ viewCaller: "KT1N5qYdthynXLfGbteRVHgKy4m6q2NGjt57" });
+
+    return {
+      success: true,
+      shares: result,
+    };
+  } catch (error: any) {
+    console.log(`Error: ${JSON.stringify(error, null, 2)}`);
+    return {
+      success: false,
+      shares: BigNumber(0),
+    };
+  }
+};
+
+export const computeProportionalAmountsOut = (
+  sptAmountIn: BigNumber,
+  sptTotalSupply: BigNumber,
+  balances: { balance: BigNumber; index: number }[]
+) => {
+  const sptRatio = sptAmountIn.multipliedBy(10 ** 18).dividedBy(sptTotalSupply);
+
+  const amountsOut = balances.map((b) => {
+    return {
+      amount: b.balance.multipliedBy(sptRatio).dividedBy(10 ** 18),
+      index: b.index,
+    };
+  });
+
+  return amountsOut;
+};

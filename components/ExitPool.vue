@@ -56,7 +56,7 @@
 
             <q-card-section>
               <div class="text-sm font-bold">
-                1.453
+                {{ estAmounts[token.index].amount }}
                 <br />
                 <span class="text-xs font-thin grey">{{ token.symbol }}</span>
               </div>
@@ -91,7 +91,7 @@ const pool = computed(() => {
   }
   return null;
 });
-console.log(pool.value?.id);
+
 const inputValue = ref<string | undefined>(undefined);
 
 const onPercentageChange = (value: any) => {
@@ -102,6 +102,25 @@ const onPercentageChange = (value: any) => {
 
   inputValue.value = input.toString();
 };
+
+const balances = computed(() =>
+  pool.value?.pool_tokens.map((t) => {
+    return {
+      balance: BigNumber(t.balance),
+      index: t.index,
+    };
+  })
+);
+console.log(balances);
+
+const estAmounts = computed(() => {
+  const amountsOut = computeProportionalAmountsOut(
+    BigNumber(inputValue.value!).multipliedBy(10 ** 18),
+    BigNumber(pool.value?.pool_shares),
+    balances.value!
+  );
+  return amountsOut;
+});
 
 const onConfirm = () => {};
 </script>
