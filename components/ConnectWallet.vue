@@ -1,15 +1,31 @@
 <template>
   <div v-if="connected">
-    <UDropdown :items="items" :popper="{ placement: 'bottom-start' }">
-      <UButton
-        icon="i-heroicons-adjustments-vertical"
-        size="xl"
-        color="primary"
-        variant="outline"
-        :label="address"
-        trailing
-      />
-    </UDropdown>
+    <q-btn-dropdown
+      outline
+      color="orange"
+      :label="address"
+      dropdown-icon="settings"
+    >
+      <q-list dark class="bg-black">
+        <q-item dark dense clickable v-close-popup @click="">
+          <q-item-section>
+            <q-item-label>Copy Address</q-item-label>
+          </q-item-section>
+        </q-item>
+
+        <q-item dark dense clickable v-close-popup @click="connect">
+          <q-item-section>
+            <q-item-label>Switch Account</q-item-label>
+          </q-item-section>
+        </q-item>
+
+        <q-item dark dense clickable v-close-popup @click="disconnect">
+          <q-item-section>
+            <q-item-label>Disconnect</q-item-label>
+          </q-item-section>
+        </q-item>
+      </q-list>
+    </q-btn-dropdown>
   </div>
   <div v-else>
     <UButton
