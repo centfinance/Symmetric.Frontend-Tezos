@@ -56,7 +56,7 @@
 
             <q-card-section>
               <div class="text-sm font-bold">
-                {{ estAmounts[token.index].amount }}
+                {{ estAmounts[token.index] }}
                 <br />
                 <span class="text-xs font-thin grey">{{ token.symbol }}</span>
               </div>
@@ -80,6 +80,7 @@
 <script lang="ts" setup>
 import { BigNumber } from "bignumber.js";
 import { Pool } from "~/store/models/Pool";
+import numbro from "numbro";
 
 const props = defineProps<{
   pool?: string | null;
@@ -114,12 +115,20 @@ const balances = computed(() =>
 console.log(balances);
 
 const estAmounts = computed(() => {
+  if (!inputValue.value || isNaN(parseInt(inputValue.value!))) {
+    return new Array(pool.value?.pool_tokens.length).fill("0.00");
+  }
   const amountsOut = computeProportionalAmountsOut(
     BigNumber(inputValue.value!).multipliedBy(10 ** 18),
     BigNumber(pool.value?.pool_shares),
     balances.value!
   );
-  return amountsOut;
+  return amountsOut.map((a) =>
+    numbro(a.amount).format({
+      average: true,
+      totalLength: 6,
+    })
+  );
 });
 
 const onConfirm = () => {};

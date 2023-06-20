@@ -104,7 +104,7 @@ function processFa1(
     },
     {
       kind: TezosOperationType.TRANSACTION,
-      destination: item.tokenContract,
+      to: item.tokenContract,
       amount: "0",
       parameters: {
         entrypoint: approveEntrypoint,
@@ -127,7 +127,7 @@ function processFa2(
   return [
     {
       kind: TezosOperationType.TRANSACTION,
-      destination: item.tokenContract,
+      to: item.tokenContract,
       amount: "0",
       parameters: {
         entrypoint: updateOperatorsEntrypoint,
@@ -138,7 +138,7 @@ function processFa2(
     },
     {
       kind: TezosOperationType.TRANSACTION,
-      destination: item.tokenContract,
+      to: item.tokenContract,
       amount: "0",
       parameters: {
         entrypoint: updateOperatorsEntrypoint,

@@ -133,6 +133,24 @@ export const getPoolShares = async (pool: string) => {
   }
 };
 
+export const computeProportionalAmountsIn = (
+  amountIn: BigNumber,
+  amountIndex: number,
+  balances: { balance: BigNumber; index: number }[]
+) => {
+  const totalBalance = balances.find((b) => b.index == amountIndex)!.balance;
+  const tokenRatio = amountIn.multipliedBy(10 ** 18).dividedBy(totalBalance);
+
+  const amountsOut = balances.map((b) => {
+    return {
+      amount: b.balance.multipliedBy(tokenRatio).dividedBy(10 ** 18),
+      index: b.index,
+    };
+  });
+
+  return amountsOut;
+};
+
 export const computeProportionalAmountsOut = (
   sptAmountIn: BigNumber,
   sptTotalSupply: BigNumber,

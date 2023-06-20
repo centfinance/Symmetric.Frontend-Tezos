@@ -1,4 +1,5 @@
 import { TezosToolkit } from "@taquito/taquito";
+import { BigNumber } from "bignumber.js";
 import { tas } from "~/utils/types/type-aliases";
 import { VaultContractType } from "~/utils/types/vault.types";
 import { Pool } from "~/store/models/Pool";
@@ -8,7 +9,7 @@ import { PoolRepository } from "~/store/repositories/PoolRepository";
 export const createJoinRequest = async (
   tezos: TezosToolkit,
   poolAddress: string,
-  amountsIn: [number, bigint][],
+  amountsIn: [number, BigNumber][],
   slippage: number = 0.5,
   receiver?: string
 ) => {
@@ -49,7 +50,7 @@ export const createJoinRequest = async (
       amountsIn.map((amount) => {
         return {
           key: tas.nat(amount[0]),
-          value: tas.nat(Number(amount[1]) + Number(amount[1]) * slippage),
+          value: tas.nat(amount[1].plus(amount[1].multipliedBy(slippage))),
         };
       })
     );

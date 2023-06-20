@@ -8,9 +8,11 @@
           dark
           outlined
           type="number"
+          placeholder="0.00"
           bottom-slots
-          v-model="amount"
+          v-model="amounts[token.index].value"
           input-class="focus:ring-0 focus:ring-offset-0"
+          @update:model-value="calculateAmounts(token.index)"
         >
           <!-- <template v-slot:before>
               <div class="bg-black">{{ token.symbol }}</div>
@@ -41,7 +43,11 @@
               color="orange"
               outline
               @click="
-                () => (amount = poolTokens[token.index].normalizedBalance())
+                () => {
+                  amounts[token.index].value =
+                    poolTokens[token.index].normalizedBalance();
+                  calculateAmounts(token.index);
+                }
               "
             >
               <div class="row items-center no-wrap">
@@ -72,7 +78,6 @@
 <script lang="ts" setup>
 import { OpKind, WalletParamsWithKind } from "@taquito/taquito";
 import { BigNumber } from "bignumber.js";
-
 import { Pool } from "~/store/models/Pool";
 import { PoolToken } from "~/store/models/PoolToken";
 
@@ -106,26 +111,98 @@ let tokens = computed(() =>
   })
 );
 
-const amount = ref("0");
+const balances = computed(() =>
+  pool.value?.pool_tokens.map((t) => {
+    return {
+      balance: BigNumber(t.balance),
+      index: t.index,
+    };
+  })
+);
+
+const amounts = tokens.value?.map((t) => ref<string | undefined>(undefined));
+
+const calculateAmounts = (i: number) => {
+  if (amounts[i].value && !isNaN(parseInt(amounts[i].value!))) {
+    const amountsOut = computeProportionalAmountsIn(
+      BigNumber(amounts[i].value as string),
+      i,
+      balances.value!
+    );
+
+    amountsOut.forEach((a, index) => {
+      if (index !== i) {
+        amounts[index].value = a.amount.toString();
+      }
+    });
+  }
+};
+
+// const addLiquidity = async () => {
+//   const tezos = await dappClient().tezos();
+//   const request = await createJoinRequest(
+//     tezos,
+//     pool.value!.address,
+//     amounts.map((a, i) => [
+//       i,
+//       BigNumber(a.value!).multipliedBy(10 ** poolTokens.value[i].decimals),
+//     ])
+//   );
+
+//   const params = request?.toTransferParams();
+
+//   const contractCall: WalletParamsWithKind = {
+//     kind: OpKind.TRANSACTION,
+//     ...params!,
+//   };
+
+//   const batch = tezos.wallet.batch([contractCall]);
+
+//   console.log(batch);
+// };
 
 const addLiquidity = async () => {
   const tezos = await dappClient().tezos();
   const request = await createJoinRequest(
     tezos,
     pool.value!.address,
-    tokens.value!.map((t) => [t.index, BigInt(t.amount)])
+    amounts.map((a, i) => [
+      i,
+      BigNumber(a.value!).multipliedBy(10 ** poolTokens.value[i].decimals),
+    ])
   );
   const params = request?.toTransferParams();
+  const approvals = pool.value?.pool_tokens.map((t) => {
+    return {
+      type: t.FA2 ? 2 : 1,
+      value: {
+        tokenContract: t.address,
+        tokenId: t.FA2 ? t.pool_token_id : undefined,
+        allowance: t.FA2 ? undefined : t.amount,
+      },
+    };
+  }) as any[];
+
+  const approveCalls = approveData(
+    approvals,
+    "KT1N5qYdthynXLfGbteRVHgKy4m6q2NGjt57"
+  );
 
   const contractCall: WalletParamsWithKind = {
     kind: OpKind.TRANSACTION,
     ...params!,
   };
+  const transactions = [];
 
-  const batch = tezos.wallet.batch([contractCall]);
+  transactions.push(...approveCalls.fa1.revokes);
+  transactions.push(...approveCalls.fa1.approves);
+  transactions.push(...approveCalls.fa2.approves);
+  transactions.push(contractCall);
+  transactions.push(...approveCalls.fa2.revokes);
+
+  console.log(transactions);
+  const batch = tezos.wallet.batch(transactions);
 
   console.log(batch);
 };
-
-console.log(tokens);
 </script>
