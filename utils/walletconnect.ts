@@ -110,10 +110,14 @@ export const dappClient = () => {
     });
   }
 
-  async function swapAccount(account: AccountInfo) {
+  async function swapAccount() {
     const client = await getDAppClient();
-
-    await client.clearActiveAccount();
+    client.requestPermissions({
+      network: {
+        type: NetworkType.GHOSTNET,
+      },
+    });
+    const account = await client.getActiveAccount();
     await client.setActiveAccount(account);
     return account;
   }

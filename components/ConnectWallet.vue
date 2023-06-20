@@ -2,6 +2,7 @@
   <div v-if="connected">
     <q-btn-dropdown
       outline
+      no-caps
       color="orange"
       :label="address"
       dropdown-icon="settings"
@@ -13,7 +14,7 @@
           </q-item-section>
         </q-item>
 
-        <q-item dark dense clickable v-close-popup @click="connect">
+        <q-item dark dense clickable v-close-popup @click="switchAccount">
           <q-item-section>
             <q-item-label>Switch Account</q-item-label>
           </q-item-section>
@@ -21,7 +22,7 @@
 
         <q-item dark dense clickable v-close-popup @click="disconnect">
           <q-item-section>
-            <q-item-label>Disconnect</q-item-label>
+            <q-item-label>Disconnect Wallet</q-item-label>
           </q-item-section>
         </q-item>
       </q-list>
@@ -57,31 +58,12 @@ const connect = async () => {
   active.value = await (await dappClient().getDAppClient()).getActiveAccount();
 };
 
+const switchAccount = async () => {
+  await dappClient().swapAccount();
+};
+
 const disconnect = async () => {
   await dappClient().disconnectWallet();
   active.value = undefined;
 };
-
-const items = [
-  [
-    {
-      label: "Copy Address",
-      icon: "i-heroicons-archive-box-20-solid",
-    },
-  ],
-  [
-    {
-      label: "Switch Account",
-      icon: "i-heroicons-archive-box-20-solid",
-      click: connect,
-    },
-  ],
-  [
-    {
-      label: "Disconnect",
-      icon: "i-heroicons-archive-box-20-solid",
-      click: disconnect,
-    },
-  ],
-];
 </script>
