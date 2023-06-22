@@ -1,9 +1,10 @@
 <template>
   <div class="flex flex-col">
-    <q-card-section>
+    <div>
       <div class="q-pa-md">
         <q-input
           v-for="token in tokens"
+          :ref="inputRefs[token.index]"
           key="id"
           dark
           outlined
@@ -15,6 +16,13 @@
           v-model="amounts[token.index].value"
           input-class="focus:ring-0 focus:ring-offset-0"
           @update:model-value="calculateAmounts(token.index)"
+          :rules="[
+            (val) => val > 0 || 'No amount entered',
+            (val) =>
+              val <= poolTokens[token.index].normalizedBalance() ||
+              'Not enough Balance',
+          ]"
+          lazy-rules="ondemand"
         >
           <!-- <template v-slot:before>
               <div class="bg-black">{{ token.symbol }}</div>
@@ -33,7 +41,7 @@
 
           <template v-slot:append>
             <div class="text-sm">
-              {{ price ? price : "" }}
+              {{ price && pool?.total_liquidity > 0 ? price : "" }}
             </div>
           </template>
 
@@ -65,6 +73,7 @@
           </template>
         </q-input>
         <q-btn
+          :loading="loading"
           color="black"
           spread
           no-caps
@@ -72,9 +81,14 @@
           label="Add Liquidity"
           class="full-width"
           @click="addLiquidity"
-        />
+        >
+          <template v-slot:loading>
+            <q-spinner-hourglass class="on-left" />
+            Sending...
+          </template>
+        </q-btn>
       </div>
-    </q-card-section>
+    </div>
   </div>
 </template>
 
@@ -89,7 +103,6 @@ const props = defineProps<{
   pool?: string | null;
   pricingAsset: PoolToken | null;
 }>();
-console.log(props.pricingAsset);
 
 const pool = computed(() => {
   if (props.pool) {
@@ -126,21 +139,25 @@ const balances = computed(() =>
   })
 );
 
+const inputRefs = ref(new Array(tokens.value.length).fill(ref(null)));
+
 const amounts = tokens.value?.map((t) => ref<string | undefined>(undefined));
 
 const calculateAmounts = (i: number) => {
-  if (amounts[i].value && !isNaN(parseInt(amounts[i].value!))) {
-    const amountsOut = computeProportionalAmountsIn(
-      BigNumber(amounts[i].value as string),
-      i,
-      balances.value!
-    );
+  if (pool.value?.total_liquidity > 0) {
+    if (amounts[i].value && !isNaN(parseInt(amounts[i].value!))) {
+      const amountsOut = computeProportionalAmountsIn(
+        BigNumber(amounts[i].value as string),
+        i,
+        balances.value!
+      );
 
-    amountsOut.forEach((a, index) => {
-      if (index !== i) {
-        amounts[index].value = a.amount.toString();
-      }
-    });
+      amountsOut.forEach((a, index) => {
+        if (index !== i) {
+          amounts[index].value = a.amount.toString();
+        }
+      });
+    }
   }
 };
 
@@ -155,7 +172,11 @@ const price = computed(() => {
   return null;
 });
 
+const loading = ref(false);
+
 const addLiquidity = async () => {
+  loading.value = true;
+  inputRefs.value.forEach((input, i) => input.value[i].validate());
   const tezos = await dappClient().tezos();
   const client = await dappClient().getDAppClient();
   const account = await client.getActiveAccount();
@@ -201,6 +222,9 @@ const addLiquidity = async () => {
   console.log(transactions);
   const batch = tezos.wallet.batch(transactions);
 
+  // const tx = await batch.send();
+  // await tx.confirmation(1);
   console.log(batch);
+  loading.value = false;
 };
 </script>

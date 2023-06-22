@@ -11,6 +11,7 @@ export const createJoinRequest = async (
   poolAddress: string,
   amountsIn: [number, BigNumber][],
   slippage: number = 0.5,
+  init: boolean = false,
   receiver?: string
 ) => {
   // Grt pool ID
@@ -56,7 +57,7 @@ export const createJoinRequest = async (
       })
     );
 
-    const kind = "EXACT_TOKENS_IN_FOR_SPT_OUT";
+    const kind = init ? "INIT" : "EXACT_TOKENS_IN_FOR_SPT_OUT";
 
     const minSPTAmountOut = tas.nat(0);
 

@@ -10,6 +10,7 @@
     </div>
     <div class="pb-2">
       <q-input
+        ref="inputRef"
         dark
         outlined
         dense
@@ -20,6 +21,14 @@
         type="number"
         step="0.01"
         input-class="focus:ring-0 focus:ring-offset-0"
+        :rules="[
+            (val) => val > 0 || 'No amount entered',
+            (val) =>
+              val <= pool!.normalizedLPBalance() ||
+              'Not enough Balance',
+          ]"
+        lazy-rules="ondemand"
+        no-error-icon
       >
         <template v-slot:after>
           <div class="my-1">
@@ -100,6 +109,7 @@ const pool = computed(() => {
   return null;
 });
 
+const inputRef = ref<any>(null);
 const inputValue = ref<string | undefined>(undefined);
 
 const onPercentageChange = (value: any) => {
@@ -137,5 +147,7 @@ const estAmounts = computed(() => {
   );
 });
 
-const onConfirm = () => {};
+const onConfirm = () => {
+  inputRef.value!.validate();
+};
 </script>
