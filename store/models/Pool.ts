@@ -28,6 +28,11 @@ export class Pool extends Model {
       userLPBalance: this.string(null),
     };
   }
+
+  static piniaOptions = {
+    persist: persistedState.localStorage,
+  };
+
   declare pool_tokens: PoolToken[];
 
   async getUserBalances(user: string) {

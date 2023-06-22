@@ -82,7 +82,7 @@ export const createExitRequest = async (
   }
 };
 
-export const useJoinPool = async (
+export const useExitPool = async (
   tezos: TezosToolkit,
   poolAddress: string,
   amountsIn: [number, bigint][],

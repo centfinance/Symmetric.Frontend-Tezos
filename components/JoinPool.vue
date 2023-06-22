@@ -7,6 +7,8 @@
           key="id"
           dark
           outlined
+          dense
+          color="white"
           type="number"
           placeholder="0.00"
           bottom-slots
@@ -20,7 +22,7 @@
 
           <template v-slot:before>
             <!-- <div class="bg-black h-full q-pa-sm"> -->
-            <q-avatar size="55px">
+            <q-avatar size="40px">
               <q-img
                 :src="poolTokens[token.index].icon"
                 spinner-color="white"
@@ -31,7 +33,7 @@
 
           <template v-slot:append>
             <div class="text-sm">
-              ${{ Number(token.amount) * token.priceRate }}
+              {{ price ? price : "" }}
             </div>
           </template>
 
@@ -42,6 +44,7 @@
             <q-btn
               color="orange"
               outline
+              dense
               @click="
                 () => {
                   amounts[token.index].value =
@@ -52,7 +55,7 @@
             >
               <div class="row items-center no-wrap">
                 <q-icon left name="wallet" />
-                <div class="text-center">
+                <div class="text-center leading-4">
                   {{ token.symbol }}
                   <br />
                   {{ poolTokens[token.index].formatBalance() }}
@@ -80,10 +83,13 @@ import { OpKind, WalletParamsWithKind } from "@taquito/taquito";
 import { BigNumber } from "bignumber.js";
 import { Pool } from "~/store/models/Pool";
 import { PoolToken } from "~/store/models/PoolToken";
+import { Wallet } from "~/store/models/Wallet";
 
 const props = defineProps<{
   pool?: string | null;
+  pricingAsset: PoolToken | null;
 }>();
+console.log(props.pricingAsset);
 
 const pool = computed(() => {
   if (props.pool) {
@@ -138,38 +144,30 @@ const calculateAmounts = (i: number) => {
   }
 };
 
-// const addLiquidity = async () => {
-//   const tezos = await dappClient().tezos();
-//   const request = await createJoinRequest(
-//     tezos,
-//     pool.value!.address,
-//     amounts.map((a, i) => [
-//       i,
-//       BigNumber(a.value!).multipliedBy(10 ** poolTokens.value[i].decimals),
-//     ])
-//   );
-
-//   const params = request?.toTransferParams();
-
-//   const contractCall: WalletParamsWithKind = {
-//     kind: OpKind.TRANSACTION,
-//     ...params!,
-//   };
-
-//   const batch = tezos.wallet.batch([contractCall]);
-
-//   console.log(batch);
-// };
+const price = computed(() => {
+  if (props.pricingAsset) {
+    const price = amounts[props.pricingAsset!.index!].value!;
+    if (isNaN(parseInt(price))) {
+      return PoolToken.formatPrice("0");
+    }
+    return PoolToken.formatPrice(price);
+  }
+  return null;
+});
 
 const addLiquidity = async () => {
   const tezos = await dappClient().tezos();
+  const client = await dappClient().getDAppClient();
+  const account = await client.getActiveAccount();
+  const wallet = useRepo(Wallet).find(account!.address);
   const request = await createJoinRequest(
     tezos,
     pool.value!.address,
     amounts.map((a, i) => [
       i,
       BigNumber(a.value!).multipliedBy(10 ** poolTokens.value[i].decimals),
-    ])
+    ]),
+    parseInt(wallet?.slippage!)
   );
   const params = request?.toTransferParams();
   const approvals = pool.value?.pool_tokens.map((t) => {

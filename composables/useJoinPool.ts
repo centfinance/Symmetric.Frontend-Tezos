@@ -16,6 +16,7 @@ export const createJoinRequest = async (
   // Grt pool ID
   const poolContract = await tezos.contract.at(poolAddress);
   const storage = await poolContract.storage();
+  console.log(storage);
   // Get tokens and order by index
   const pool = useRepo(Pool).with("pool_tokens").find(poolAddress);
 

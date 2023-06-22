@@ -1,15 +1,20 @@
 <template>
-  <q-card-section>
-    <div class="flex flex-row justify-end gap-x-1 mx-4 my-1">
-      <q-btn outline dense label="25%" @click="onPercentageChange(25)" />
-      <q-btn outline dense label="50%" @click="onPercentageChange(50)" />
-      <q-btn outline dense label="75%" @click="onPercentageChange(75)" />
+  <div class="q-pa-sm">
+    <div class="flex flex-row justify-between gap-x-1 mx-4 my-1">
+      <div class="place-self-end font-bold">How much to withdraw?</div>
+      <div>
+        <q-btn outline dense label="25%" @click="onPercentageChange(25)" />
+        <q-btn outline dense label="50%" @click="onPercentageChange(50)" />
+        <q-btn outline dense label="75%" @click="onPercentageChange(75)" />
+      </div>
     </div>
-    <div>
+    <div class="pb-2">
       <q-input
         dark
-        borderless
+        outlined
+        dense
         item-aligned
+        color="white"
         v-model="inputValue"
         placeholder="0.00"
         type="number"
@@ -38,7 +43,9 @@
       </q-input>
     </div>
     <div>
-      <div class="text-center text-md font-bold">You will receive:</div>
+      <div class="text-center text-md font-bold pb-1">
+        You will receive at least:
+      </div>
       <div class="grid grid-cols-2 gap-3">
         <q-card
           dark
@@ -65,7 +72,7 @@
         </q-card>
       </div>
     </div>
-  </q-card-section>
+  </div>
   <q-card-actions align="center">
     <q-btn
       flat
@@ -112,7 +119,6 @@ const balances = computed(() =>
     };
   })
 );
-console.log(balances);
 
 const estAmounts = computed(() => {
   if (!inputValue.value || isNaN(parseInt(inputValue.value!))) {

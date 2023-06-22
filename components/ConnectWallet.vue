@@ -40,6 +40,7 @@
 </template>
 
 <script lang="ts" setup>
+import { Wallet } from "~/store/models/Wallet";
 import { dappClient } from "~/utils/walletconnect";
 
 const client = await dappClient().getDAppClient();
@@ -54,7 +55,13 @@ const address = computed(
 const connected = computed(() => (active.value ? true : false));
 
 const connect = async () => {
-  await dappClient().connectAccount();
+  const resp = await dappClient().connectAccount();
+  useRepo(Wallet).save({
+    id: resp.address,
+    walletKey: resp.walletKey,
+    lastConnected: resp.accountInfo.connectedAt,
+    slippage: "0.5",
+  });
   active.value = await (await dappClient().getDAppClient()).getActiveAccount();
 };
 

@@ -20,6 +20,7 @@ export default defineNuxtConfig({
     "@nuxthq/ui",
     "@pinia/nuxt",
     "@pinia-orm/nuxt",
+    "@pinia-plugin-persistedstate/nuxt",
   ],
   ssr: false,
 
@@ -29,6 +30,9 @@ export default defineNuxtConfig({
         httpEndpoint: "http://3.89.241.7/v1/graphql",
       },
     },
+  },
+  piniaPersistedstate: {
+    storage: "localStorage",
   },
   quasar: {
     extras: {

@@ -25,8 +25,15 @@
             { label: 'Remove Liquidity', value: false },
           ]"
         />
+        <div class="pt-3 flex justify-end">
+          <SetSlippage />
+        </div>
       </q-card-section>
-      <join-pool v-if="open && add" :pool="props.pool" />
+      <join-pool
+        v-if="open && add"
+        :pool="props.pool"
+        :pricingAsset="pricingAsset"
+      />
       <exit-pool v-if="open && !add" :pool="props.pool" />
     </q-card>
   </q-dialog>
@@ -53,16 +60,24 @@ const pool = computed(() => {
   return null;
 });
 
+const pricingAsset = computed(() => {
+  const stable = pool.value?.pool_tokens.find((t) => t.isStable());
+  if (stable) {
+    return stable;
+  }
+  return null;
+});
+
 const tezos = await dappClient().tezos();
 const userAddress = await tezos.wallet.pkh();
 
 pool.value
-  ? await useRepo(PoolRepository).updateUserBalances(pool.value, userAddress)
+  ? useRepo(PoolRepository).updateUserBalances(pool.value, userAddress)
   : null;
 
 pool.value
-  ? await useRepo(PoolRepository).updateUserLPBalance(pool.value, userAddress)
+  ? useRepo(PoolRepository).updateUserLPBalance(pool.value, userAddress)
   : null;
 
-pool.value ? await useRepo(PoolRepository).updatePoolShares(pool.value) : null;
+pool.value ? useRepo(PoolRepository).updatePoolShares(pool.value) : null;
 </script>
