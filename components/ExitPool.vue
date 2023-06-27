@@ -97,6 +97,7 @@
 import { BigNumber } from "bignumber.js";
 import { Pool } from "~/store/models/Pool";
 import numbro from "numbro";
+import { Wallet } from "~/store/models/Wallet";
 
 const props = defineProps<{
   pool?: string | null;
@@ -129,6 +130,19 @@ const balances = computed(() =>
     };
   })
 );
+console.log(balances.value![0].balance.toString());
+
+const proportionalAmounts = computed(() => {
+  if (!inputValue.value || isNaN(parseInt(inputValue.value!))) {
+    return new Array(pool.value?.pool_tokens.length).fill("0.00");
+  }
+  const amountsOut = computeProportionalAmountsOut(
+    BigNumber(inputValue.value!).multipliedBy(10 ** 18),
+    BigNumber(pool.value?.pool_shares),
+    balances.value!
+  );
+  return amountsOut;
+});
 
 const estAmounts = computed(() => {
   if (!inputValue.value || isNaN(parseInt(inputValue.value!))) {
@@ -147,7 +161,20 @@ const estAmounts = computed(() => {
   );
 });
 
-const onConfirm = () => {
-  inputRef.value!.validate();
+const onConfirm = async () => {
+  // inputRef.value!.validate();
+  // const tezos = await dappClient().tezos();
+  // const client = await dappClient().getDAppClient();
+  // const account = await client.getActiveAccount();
+  // const wallet = useRepo(Wallet).find(account!.address);
+  // const request = await createExitRequest(
+  //   tezos,
+  //   pool.value!
+  //   amounts.map((a, i) => [
+  //     i,
+  //     BigNumber(a.value!).multipliedBy(10 ** poolTokens.value[i].decimals),
+  //   ]),
+  //   parseInt(wallet?.slippage!)
+  // );
 };
 </script>

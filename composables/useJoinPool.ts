@@ -2,6 +2,7 @@ import { TezosToolkit } from "@taquito/taquito";
 import { BigNumber } from "bignumber.js";
 import { tas } from "~/utils/types/type-aliases";
 import { VaultContractType } from "~/utils/types/vault.types";
+import { Storage } from "~/utils/types/weighted-pool.types";
 import { Pool } from "~/store/models/Pool";
 import { PoolToken } from "~/store/models/PoolToken";
 import { PoolRepository } from "~/store/repositories/PoolRepository";
@@ -16,8 +17,8 @@ export const createJoinRequest = async (
 ) => {
   // Grt pool ID
   const poolContract = await tezos.contract.at(poolAddress);
-  const storage = await poolContract.storage();
-  console.log(storage);
+  const storage = (await poolContract.storage()) as Storage;
+  const pool_id = storage.poolId?.Some[1] as BigNumber;
   // Get tokens and order by index
   const pool = useRepo(Pool).with("pool_tokens").find(poolAddress);
 
@@ -68,7 +69,7 @@ export const createJoinRequest = async (
     const request = vault.methodsObject.joinPool({
       poolId: {
         0: tas.address(poolAddress),
-        1: tas.nat(1),
+        1: tas.nat(pool_id),
       },
       recipient,
       sender,

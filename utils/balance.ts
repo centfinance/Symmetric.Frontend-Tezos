@@ -139,16 +139,24 @@ export const computeProportionalAmountsIn = (
   balances: { balance: BigNumber; index: number }[]
 ) => {
   const totalBalance = balances.find((b) => b.index == amountIndex)!.balance;
-  const tokenRatio = amountIn.multipliedBy(10 ** 18).dividedBy(totalBalance);
+  const tokenRatio = amountIn
+    .multipliedBy(10 ** 18)
+    .plus(totalBalance)
+    .minus(1)
+    .dividedBy(totalBalance);
 
-  const amountsOut = balances.map((b) => {
+  const amountsIn = balances.map((b) => {
     return {
-      amount: b.balance.multipliedBy(tokenRatio).dividedBy(10 ** 18),
+      amount: b.balance
+        .multipliedBy(tokenRatio)
+        .minus(1)
+        .dividedBy(10 ** 18)
+        .plus(1),
       index: b.index,
     };
   });
 
-  return amountsOut;
+  return amountsIn;
 };
 
 export const computeProportionalAmountsOut = (
