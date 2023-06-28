@@ -8,7 +8,6 @@
           key="id"
           dark
           outlined
-          dense
           color="white"
           type="number"
           placeholder="0.00"

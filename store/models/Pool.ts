@@ -3,6 +3,7 @@ import { Model } from "pinia-orm";
 import { PoolToken } from "./PoolToken";
 import numbro from "numbro";
 import { BigNumber } from "bignumber.js";
+import { TezosToolkit } from "@taquito/taquito";
 
 export class Pool extends Model {
   static entity = "pools";
@@ -34,6 +35,16 @@ export class Pool extends Model {
   };
 
   declare pool_tokens: PoolToken[];
+  declare address: string;
+  declare poolId: number;
+
+  async getPoolId(tezos: TezosToolkit) {
+    const poolContract = await tezos.contract.at(this.address);
+    const storage = (await poolContract.storage()) as Storage;
+    const pool_id = storage.poolId?.Some[1] as BigNumber;
+    console.log(pool_id);
+    useRepo(Pool).save({ id: this.id, poolId: pool_id.toNumber() });
+  }
 
   async getUserBalances(user: string) {
     const tokens = this.pool_tokens.map((t) => {

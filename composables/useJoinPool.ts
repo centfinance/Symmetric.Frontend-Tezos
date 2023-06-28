@@ -5,7 +5,6 @@ import { VaultContractType } from "~/utils/types/vault.types";
 import { Storage } from "~/utils/types/weighted-pool.types";
 import { Pool } from "~/store/models/Pool";
 import { PoolToken } from "~/store/models/PoolToken";
-import { PoolRepository } from "~/store/repositories/PoolRepository";
 
 export const createJoinRequest = async (
   tezos: TezosToolkit,

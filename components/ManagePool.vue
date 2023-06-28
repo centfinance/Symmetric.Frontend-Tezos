@@ -71,6 +71,8 @@ const pricingAsset = computed(() => {
 const tezos = await dappClient().tezos();
 const userAddress = await tezos.wallet.pkh();
 
+pool.value ? pool.value.getPoolId(tezos) : null;
+
 pool.value
   ? useRepo(PoolRepository).updateUserBalances(pool.value, userAddress)
   : null;
