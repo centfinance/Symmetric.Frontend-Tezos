@@ -84,13 +84,20 @@
   </div>
   <q-card-actions align="center">
     <q-btn
-      flat
+      :loading="loading"
+      color="black"
+      spread
       no-caps
       text-color="white"
       class="full-width bg-black"
       label="Remove Liquidity"
       @click="onConfirm"
-    />
+    >
+      <template v-slot:loading>
+        <q-spinner-hourglass class="on-left" />
+        Sending...
+      </template>
+    </q-btn>
   </q-card-actions>
 </template>
 <script lang="ts" setup>
@@ -98,6 +105,7 @@ import { BigNumber } from "bignumber.js";
 import { Pool } from "~/store/models/Pool";
 import numbro from "numbro";
 import { Wallet } from "~/store/models/Wallet";
+import { request } from "http";
 
 const props = defineProps<{
   pool?: string | null;
@@ -112,6 +120,8 @@ const pool = computed(() => {
 
 const inputRef = ref<any>(null);
 const inputValue = ref<string | undefined>(undefined);
+
+const loading = ref(false);
 
 const onPercentageChange = (value: any) => {
   const input = BigNumber(pool.value?.userLPBalance)
@@ -133,14 +143,12 @@ const balances = computed(() =>
 console.log(balances.value![0].balance.toString());
 
 const proportionalAmounts = computed(() => {
-  if (!inputValue.value || isNaN(parseInt(inputValue.value!))) {
-    return new Array(pool.value?.pool_tokens.length).fill("0.00");
-  }
   const amountsOut = computeProportionalAmountsOut(
     BigNumber(inputValue.value!).multipliedBy(10 ** 18),
     BigNumber(pool.value?.pool_shares),
     balances.value!
   );
+  console.log(amountsOut);
   return amountsOut;
 });
 
@@ -162,19 +170,35 @@ const estAmounts = computed(() => {
 });
 
 const onConfirm = async () => {
-  // inputRef.value!.validate();
-  // const tezos = await dappClient().tezos();
-  // const client = await dappClient().getDAppClient();
-  // const account = await client.getActiveAccount();
-  // const wallet = useRepo(Wallet).find(account!.address);
-  // const request = await createExitRequest(
-  //   tezos,
-  //   pool.value!
-  //   amounts.map((a, i) => [
-  //     i,
-  //     BigNumber(a.value!).multipliedBy(10 ** poolTokens.value[i].decimals),
-  //   ]),
-  //   parseInt(wallet?.slippage!)
-  // );
+  loading.value = true;
+  const amounts = proportionalAmounts.value.map((v) => {
+    return {
+      index: v.index,
+      amount: BigNumber(v.amount.toFixed(18)).multipliedBy(10 ** 18),
+    };
+  });
+  inputRef.value!.validate();
+  const tezos = await dappClient().tezos();
+  const client = await dappClient().getDAppClient();
+  const account = await client.getActiveAccount();
+  const wallet = useRepo(Wallet).find(account!.address);
+  console.log(
+    BigNumber(BigNumber(inputValue.value!).toFixed(18)).multipliedBy(10 ** 18)
+  );
+  console.log(amounts.map((a) => a.amount.toString()));
+  const request = await createExitRequest(
+    tezos,
+    pool.value!,
+    BigNumber(BigNumber(inputValue.value!).toFixed(18)).multipliedBy(10 ** 18),
+    amounts,
+    wallet?.slippage!
+  );
+
+  console.log(request);
+
+  const tx = await request!.send();
+  const confirmation = await tx.confirmation();
+  console.log(confirmation);
+  loading.value = false;
 };
 </script>

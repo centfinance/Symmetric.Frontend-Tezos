@@ -148,7 +148,10 @@ export const dappClient = () => {
     const { TezosToolkit } = await import("@taquito/taquito");
     const Tezos = new TezosToolkit(getRpcNode());
     const wallet = await getDAppClientWallet();
-    if (wallet) Tezos.setWalletProvider(wallet);
+    if (wallet) {
+      console.log("provider is set");
+      Tezos.setProvider({ wallet });
+    }
     return Tezos;
   }
   async function disconnectWallet() {

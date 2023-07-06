@@ -1,10 +1,12 @@
 import { checkAddress } from "./tz.js";
 import { TezosOperationType } from "@airgap/beacon-sdk";
+import { OpKind, WalletParamsWithKind } from "@taquito/taquito";
 
 const approveEntrypoint = "approve";
 const updateOperatorsEntrypoint = "update_operators";
 
 import { TezosToolkit } from "@taquito/taquito";
+import { tas } from "./types/type-aliases.js";
 
 // async function checkAllowanceOrOperator(
 //   tezos: TezosToolkit,
@@ -123,10 +125,11 @@ function processFa2(
   if (!item.tokenId && typeof item.tokenId !== "number") {
     throw new Error(`invalid tokenId value: ${item.tokenId}`);
   }
+  console.log(item, spender);
 
   return [
     {
-      kind: TezosOperationType.TRANSACTION,
+      kind: OpKind.TRANSACTION,
       to: item.tokenContract,
       amount: "0",
       parameters: {
@@ -137,7 +140,7 @@ function processFa2(
       },
     },
     {
-      kind: TezosOperationType.TRANSACTION,
+      kind: OpKind.TRANSACTION,
       to: item.tokenContract,
       amount: "0",
       parameters: {
@@ -148,4 +151,53 @@ function processFa2(
       },
     },
   ];
+}
+
+export async function fa2UpdateOperators(
+  tezos: TezosToolkit,
+  owner: string,
+  tokenContract: string,
+  tokenIds: number[],
+  spender: string
+) {
+  const contract = await tezos.wallet.at(tokenContract);
+  console.log(tokenIds);
+  const approveRequests = tokenIds.map((id) => {
+    return {
+      kind: OpKind.TRANSACTION,
+      ...contract.methods
+        .update_operators([
+          {
+            add_operator: {
+              owner: tas.address(owner),
+              operator: tas.address(spender),
+              token_id: tas.nat(id),
+            },
+          },
+        ])
+        .toTransferParams(),
+    } as WalletParamsWithKind;
+  });
+
+  const revokeRequests = tokenIds.map((id) => {
+    return {
+      kind: OpKind.TRANSACTION,
+      ...contract.methods
+        .update_operators([
+          {
+            remove_operator: {
+              owner: tas.address(owner),
+              operator: tas.address(spender),
+              token_id: tas.nat(id),
+            },
+          },
+        ])
+        .toTransferParams(),
+    } as WalletParamsWithKind;
+  });
+
+  return {
+    approveRequests,
+    revokeRequests,
+  };
 }

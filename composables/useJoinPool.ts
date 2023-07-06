@@ -1,7 +1,7 @@
 import { TezosToolkit } from "@taquito/taquito";
 import { BigNumber } from "bignumber.js";
 import { tas } from "~/utils/types/type-aliases";
-import { VaultContractType } from "~/utils/types/vault.types";
+import { VaultContractType, VaultWalletType } from "~/utils/types/vault.types";
 import { Storage } from "~/utils/types/weighted-pool.types";
 import { Pool } from "~/store/models/Pool";
 import { PoolToken } from "~/store/models/PoolToken";
@@ -61,8 +61,8 @@ export const createJoinRequest = async (
 
     const minSPTAmountOut = tas.nat(0);
 
-    const vault = await tezos.contract.at<VaultContractType>(
-      "KT1N5qYdthynXLfGbteRVHgKy4m6q2NGjt57"
+    const vault = await tezos.wallet.at<VaultWalletType>(
+      "KT1MokJei8PpsdFCgvTPnC8zDWkpiryYNvsK"
     );
 
     const request = vault.methodsObject.joinPool({
@@ -71,16 +71,19 @@ export const createJoinRequest = async (
         1: tas.nat(pool_id),
       },
       recipient,
-      sender,
       request: {
         assets,
         limits,
         userData: {
+          allT: undefined,
           amountsIn: amounts,
           kind,
           minSPTAmountOut,
+          sptAmountOut: undefined,
+          tokenIndex: undefined,
         },
       },
+      sender,
     });
     return request;
   }

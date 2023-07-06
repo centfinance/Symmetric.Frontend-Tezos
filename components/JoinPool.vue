@@ -93,6 +93,7 @@
 
 <script lang="ts" setup>
 import { OpKind, WalletParamsWithKind } from "@taquito/taquito";
+import { localForger } from "@taquito/local-forging";
 import { BigNumber } from "bignumber.js";
 import { Pool } from "~/store/models/Pool";
 import { PoolToken } from "~/store/models/PoolToken";
@@ -153,7 +154,7 @@ const calculateAmounts = (i: number) => {
 
       amountsOut.forEach((a, index) => {
         if (index !== i) {
-          amounts[index].value = a.amount.toString();
+          amounts[index].value = a.amount.toFixed(18);
         }
       });
     }
@@ -190,21 +191,32 @@ const addLiquidity = async () => {
     parseInt(wallet?.slippage!)
   );
   const params = request?.toTransferParams();
-  const approvals = pool.value?.pool_tokens.map((t) => {
-    return {
-      type: t.FA2 ? 2 : 1,
-      value: {
-        tokenContract: t.address,
-        tokenId: t.FA2 ? t.pool_token_id : undefined,
-        allowance: t.FA2 ? undefined : t.amount,
-      },
-    };
-  }) as any[];
+  console.log(params);
 
-  const approveCalls = approveData(
-    approvals,
+  // const approvals = pool.value?.pool_tokens.map((t) => {
+  //   return {
+  //     type: t.FA2 ? 2 : 1,
+  //     value: {
+  //       tokenContract: t.address,
+  //       tokenId: t.FA2 ? t.pool_token_id : undefined,
+  //       allowance: t.FA2 ? undefined : t.amount,
+  //       owner: wallet!.id,
+  //     },
+  //   };
+  // }) as any[];
+
+  const operatorCalls = await fa2UpdateOperators(
+    tezos,
+    wallet!.id,
+    pool.value!.pool_tokens[0].address,
+    pool.value!.pool_tokens.map((t) => t.pool_token_id),
     "KT1N5qYdthynXLfGbteRVHgKy4m6q2NGjt57"
   );
+
+  // const approveCalls = approveData(
+  //   approvals,
+  //   "KT1N5qYdthynXLfGbteRVHgKy4m6q2NGjt57"
+  // );
 
   const contractCall: WalletParamsWithKind = {
     kind: OpKind.TRANSACTION,
@@ -212,18 +224,33 @@ const addLiquidity = async () => {
   };
   const transactions = [];
 
-  transactions.push(...approveCalls.fa1.revokes);
-  transactions.push(...approveCalls.fa1.approves);
-  transactions.push(...approveCalls.fa2.approves);
+  transactions.push(...operatorCalls.approveRequests);
   transactions.push(contractCall);
-  transactions.push(...approveCalls.fa2.revokes);
+  transactions.push(...operatorCalls.revokeRequests);
+
+  // transactions.push(...approveCalls.fa1.revokes);
+  // transactions.push(...approveCalls.fa1.approves);
+  // transactions.push(...approveCalls.fa2.approves);
+
+  // transactions.push(...approveCalls.fa2.revokes);
 
   console.log(transactions);
   const batch = tezos.wallet.batch(transactions);
+  const tx = await batch.send();
+  const confirmation = await tx.confirmation();
+  console.log(confirmation);
+  // console.log(batch);
+  // const preparedBatch = await tezos.prepare.batch(transactions);
+  // // const forgeParams = await tezos.prepare.toForge(preparedBatch);
 
-  // const tx = await batch.send();
-  // await tx.confirmation(1);
-  console.log(batch);
+  // // const prepareParams = await tezos.prepare.toPreapply(preparedBatch);
+  // // console.log(prepareParams);
+
+  // const preApplyOps = await tezos.rpc.runOperation({
+  //   operation: preparedBatch.opOb,
+  //   chain_id: "NetXnHfVqm9iesp",
+  // });
+  // console.log(preApplyOps);
   loading.value = false;
 };
 </script>

@@ -15,14 +15,15 @@ export const createSwapRequest = async (
   tokenIn: { address: string; id: number },
   tokenOut: { address: string; id: number },
   amount: BigNumber,
-  slippage: number = 0.5,
+  user: string,
+  slippage: string = "0.5",
   receiver?: string
 ) => {
   // const poolContract = await tezos.contract.at(pool.address);
   // const storage = (await poolContract.storage()) as Storage;
   // const pool_id = storage.poolId?.Some[1] as BigNumber;
 
-  const user = await tezos.wallet.pkh();
+  // const user = await tezos.wallet.pkh();
 
   const sender = tas.address(user);
 
@@ -44,12 +45,13 @@ export const createSwapRequest = async (
   };
 
   const vault = await tezos.contract.at("KT1N5qYdthynXLfGbteRVHgKy4m6q2NGjt57");
-
+  console.log(vault);
   const swapRequest = vault.methods.swap(
     tas.timestamp(addMinutes(new Date(), 30).toISOString()),
     tas.address(sender),
     tas.address(receiver ? receiver : sender),
-    tas.nat(amount.plus(amount.multipliedBy(slippage))),
+    //TODO: Add Slippage
+    tas.nat(0),
     singleSwap.amount,
     singleSwap.assetIn[0],
     singleSwap.assetIn[1],
