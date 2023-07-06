@@ -14,10 +14,6 @@ export const createJoinRequest = async (
   init: boolean = false,
   receiver?: string
 ) => {
-  // Grt pool ID
-  const poolContract = await tezos.contract.at(poolAddress);
-  const storage = (await poolContract.storage()) as Storage;
-  const pool_id = storage.poolId?.Some[1] as BigNumber;
   // Get tokens and order by index
   const pool = useRepo(Pool).with("pool_tokens").find(poolAddress);
 
@@ -68,7 +64,7 @@ export const createJoinRequest = async (
     const request = vault.methodsObject.joinPool({
       poolId: {
         0: tas.address(poolAddress),
-        1: tas.nat(pool_id),
+        1: tas.nat(pool.poolId),
       },
       recipient,
       request: {

@@ -105,7 +105,6 @@ import { BigNumber } from "bignumber.js";
 import { Pool } from "~/store/models/Pool";
 import numbro from "numbro";
 import { Wallet } from "~/store/models/Wallet";
-import { request } from "http";
 
 const props = defineProps<{
   pool?: string | null;
@@ -148,7 +147,6 @@ const proportionalAmounts = computed(() => {
     BigNumber(pool.value?.pool_shares),
     balances.value!
   );
-  console.log(amountsOut);
   return amountsOut;
 });
 
@@ -171,34 +169,36 @@ const estAmounts = computed(() => {
 
 const onConfirm = async () => {
   loading.value = true;
-  const amounts = proportionalAmounts.value.map((v) => {
-    return {
-      index: v.index,
-      amount: BigNumber(v.amount.toFixed(18)).multipliedBy(10 ** 18),
-    };
-  });
-  inputRef.value!.validate();
-  const tezos = await dappClient().tezos();
-  const client = await dappClient().getDAppClient();
-  const account = await client.getActiveAccount();
-  const wallet = useRepo(Wallet).find(account!.address);
-  console.log(
-    BigNumber(BigNumber(inputValue.value!).toFixed(18)).multipliedBy(10 ** 18)
-  );
-  console.log(amounts.map((a) => a.amount.toString()));
-  const request = await createExitRequest(
-    tezos,
-    pool.value!,
-    BigNumber(BigNumber(inputValue.value!).toFixed(18)).multipliedBy(10 ** 18),
-    amounts,
-    wallet?.slippage!
-  );
+  try {
+    const amounts = proportionalAmounts.value.map((v) => {
+      return {
+        index: v.index,
+        amount: BigNumber(v.amount.toFixed(18)).multipliedBy(10 ** 18),
+      };
+    });
+    inputRef.value!.validate();
+    const tezos = await dappClient().tezos();
+    const client = await dappClient().getDAppClient();
+    const account = await client.getActiveAccount();
+    const wallet = useRepo(Wallet).find(account!.address);
+    const request = await createExitRequest(
+      tezos,
+      pool.value!,
+      BigNumber(BigNumber(inputValue.value!).toFixed(18)).multipliedBy(
+        10 ** 18
+      ),
+      amounts,
+      wallet?.slippage!
+    );
 
-  console.log(request);
-
-  const tx = await request!.send();
-  const confirmation = await tx.confirmation();
-  console.log(confirmation);
+    const tx = await request!.send();
+    const confirmation = await tx.confirmation();
+    console.log(confirmation);
+    // reset inputs
+    // display confirmation
+  } catch (e: any) {
+    console.log(e);
+  }
   loading.value = false;
 };
 </script>

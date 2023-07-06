@@ -76,6 +76,11 @@ import { OpKind, WalletParamsWithKind } from "@taquito/taquito";
 import { BigNumber } from "bignumber.js";
 import { Pool } from "~/store/models/Pool";
 import { Wallet } from "~/store/models/Wallet";
+import { TokenRepository } from "~/store/repositories/TokenRepository";
+
+const tokenRepo = useRepo(TokenRepository);
+
+await tokenRepo.fetch();
 
 const options = [
   {
@@ -191,46 +196,49 @@ const loading = ref(false);
 
 const swap = async () => {
   loading.value = true;
-  if (tokenIn.value && tokenOut.value && tokenIn.value !== tokenOut.value) {
-    const tezos = await dappClient().tezos();
-    const client = await dappClient().getDAppClient();
-    const account = await client.getActiveAccount();
-    const wallet = useRepo(Wallet).find(account!.address);
-    const request = await createSwapRequest(
-      tezos,
-      pool.value!,
-      tokenIn.value.token,
-      tokenOut.value.token,
-      BigNumber(BigNumber(amountIn.value!).toFixed(18)).multipliedBy(10 ** 18),
-      wallet!.id,
-      wallet!.slippage
-    );
-    console.log(request);
-    const params = request.toTransferParams();
+  try {
+    if (tokenIn.value && tokenOut.value && tokenIn.value !== tokenOut.value) {
+      const tezos = await dappClient().tezos();
+      const client = await dappClient().getDAppClient();
+      const account = await client.getActiveAccount();
+      const wallet = useRepo(Wallet).find(account!.address);
+      const request = await createSwapRequest(
+        tezos,
+        pool.value!,
+        tokenIn.value.token,
+        tokenOut.value.token,
+        BigNumber(BigNumber(amountIn.value!).toFixed(18)).multipliedBy(
+          10 ** 18
+        ),
+        wallet!.id,
+        wallet!.slippage
+      );
+      const params = request.toTransferParams();
 
-    const operatorCalls = await fa2UpdateOperators(
-      tezos,
-      wallet!.id,
-      pool.value!.pool_tokens[0].address,
-      [tokenIn.value.token.id],
-      "KT1N5qYdthynXLfGbteRVHgKy4m6q2NGjt57"
-    );
+      const operatorCalls = await fa2UpdateOperators(
+        tezos,
+        wallet!.id,
+        pool.value!.pool_tokens[0].address,
+        [tokenIn.value.token.id],
+        "KT1N5qYdthynXLfGbteRVHgKy4m6q2NGjt57"
+      );
 
-    const contractCall: WalletParamsWithKind = {
-      kind: OpKind.TRANSACTION,
-      ...params!,
-    };
-    const transactions = [];
+      const contractCall: WalletParamsWithKind = {
+        kind: OpKind.TRANSACTION,
+        ...params!,
+      };
+      const transactions = [];
 
-    transactions.push(...operatorCalls.approveRequests);
-    transactions.push(contractCall);
-    transactions.push(...operatorCalls.revokeRequests);
+      transactions.push(...operatorCalls.approveRequests);
+      transactions.push(contractCall);
+      transactions.push(...operatorCalls.revokeRequests);
 
-    const batch = tezos.wallet.batch(transactions);
-    const tx = await batch.send();
-    const confirmation = await tx.confirmation();
-    console.log(confirmation);
-  }
+      const batch = tezos.wallet.batch(transactions);
+      const tx = await batch.send();
+      const confirmation = await tx.confirmation();
+      console.log(confirmation);
+    }
+  } catch (e: any) {}
   loading.value = false;
 };
 </script>
