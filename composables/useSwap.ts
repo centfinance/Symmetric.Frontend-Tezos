@@ -1,4 +1,5 @@
 import { TezosToolkit } from "@taquito/taquito";
+import { formatFixed, parseFixed } from "@ethersproject/bignumber";
 import { BigNumber } from "bignumber.js";
 import { Pool } from "~/store/models/Pool";
 import { tas } from "~/utils/types/type-aliases";
@@ -8,6 +9,38 @@ import { Storage } from "~/utils/types/weighted-pool.types";
 function addMinutes(date: Date, minutes: number) {
   return new Date(date.getTime() + minutes * 60000);
 }
+
+export const calcSwapAmountOut = (
+  amount: number,
+  balance_in: number,
+  balance_out: number,
+  tokenIn: { decimals: number; weight: number },
+  tokenOut: { decimals: number; weight: number },
+  swapFee: number
+): BigNumber => {
+  const ONE = 1 * 10 ** 18;
+  const Bi = parseFloat(
+    formatFixed((balance_in * ONE).toString(), tokenIn.decimals)
+  );
+  const Bo = parseFloat(
+    formatFixed((balance_out * ONE).toString(), tokenOut.decimals)
+  );
+
+  const wi = parseFloat(tokenIn.weight.toString());
+  const wo = parseFloat(tokenOut.weight.toString());
+  const Ai = Number(amount);
+  const f = parseFloat(formatFixed(swapFee, 18));
+  return bnum(Bo * (1 - (Bi / (Bi + Ai * (1 - f))) ** (wi / wo)));
+  // return Bo.times(
+  //     bnum(1).minus(
+  //         bnum(
+  //             Bi.div(
+  //                 Bi.plus(Ai.times(bnum(1).minus(f)))
+  //             ).toNumber() ** wi.div(wo).toNumber()
+  //         )
+  //     )
+  // )
+};
 
 export const createSwapRequest = async (
   tezos: TezosToolkit,

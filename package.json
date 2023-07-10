@@ -31,6 +31,7 @@
   },
   "dependencies": {
     "@airgap/beacon-sdk": "^4.0.4",
+    "@ethersproject/bignumber": "^5.7.0",
     "@pinia-orm/nuxt": "^1.6.7",
     "@pinia/nuxt": "^0.4.11",
     "@quasar/extras": "^1.16.4",

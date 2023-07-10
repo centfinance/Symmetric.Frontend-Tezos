@@ -52,4 +52,10 @@ export class TokenRepository extends Repository {
     }
     console.log(data.value);
   }
+
+  async fetchUserBalances(user: string) {
+    const tokens = this.all();
+    const data = await getBalanceFromTzkt(tokens, user);
+    this.save(data.balances);
+  }
 }

@@ -1,4 +1,6 @@
 import { Model } from "pinia-orm";
+import { BigNumber } from "bignumber.js";
+import numbro from "numbro";
 
 export class Token extends Model {
   static entity = "tokens";
@@ -25,4 +27,17 @@ export class Token extends Model {
   static piniaOptions = {
     persist: persistedState.localStorage,
   };
+
+  normalizedBalance(): string {
+    return BigNumber(this.userBalance)
+      .dividedBy(10 ** this.decimals)
+      .toString();
+  }
+
+  formatBalance(): string {
+    return numbro(this.normalizedBalance()).format({
+      average: true,
+      totalLength: 6,
+    });
+  }
 }

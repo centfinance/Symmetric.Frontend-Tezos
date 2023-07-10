@@ -40,9 +40,9 @@ export const getBalanceFromTzkt = async (
   try {
     const balanceResponse = await getTzktTokenData(
       `/balances?account=${userTezosAddress}&token.contract.in=${tokens
-        .map((t) => t.contract)
+        .map((t) => t.address)
         .toString()}&token.tokenId.in=${tokens
-        .map((t) => t.tokenId)
+        .map((t) => t.token_id)
         .toString()}`
     );
 
@@ -57,8 +57,8 @@ export const getBalanceFromTzkt = async (
     const balances = balanceData.map((b: any) => {
       const id = tokens.find(
         (t) =>
-          t.contract == b.token.contract.address &&
-          t.tokenId === Number(b.token.tokenId)
+          t.address == b.token.contract.address &&
+          t.token_id === Number(b.token.tokenId)
       ).id;
 
       if (id) {

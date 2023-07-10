@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="container rounded-md mx-auto grid grid-cols-1 p-4 bg-black">
+    <div class="w-2/3 rounded-md mx-auto grid grid-cols-1 p-4 bg-black">
       <div class="pb-3 flex justify-end">
         <SetSlippage />
       </div>
@@ -23,7 +23,7 @@
             default="CTez"
             :options="optionsInRef"
           />
-          Balance :
+          <div>Balance: {{ tokenIn?.balance }}</div>
         </div>
       </div>
       <div class="mx-auto">
@@ -48,6 +48,7 @@
             label="Select Token"
             :options="optionsOutRef"
           />
+          <div v-if="tokenOut">Balance: {{ tokenOut?.balance }}</div>
         </div>
       </div>
       <div>
@@ -76,123 +77,173 @@ import { OpKind, WalletParamsWithKind } from "@taquito/taquito";
 import { BigNumber } from "bignumber.js";
 import { Pool } from "~/store/models/Pool";
 import { Wallet } from "~/store/models/Wallet";
+import { Token } from "~/store/models/Token";
 import { TokenRepository } from "~/store/repositories/TokenRepository";
+import { calcSwapAmountOut } from "~/composables/useSwap";
 
 const tokenRepo = useRepo(TokenRepository);
 
 await tokenRepo.fetch();
 
-const options = [
-  {
-    label: "CTez",
-    value: "CTez",
-    description: "KT1JA3UQ6R4C84mH3FqS3G5mKFeEdLumrDc30",
-    icon: "https://thumbs.dipdup.net/Qme4ybadbY4H84h5WLPjdo47YQUxxVoJHWZrwYq2JZriM4",
-    token: {
-      address: "KT1JA3UQ6R4C84mH3FqS3G5mKFeEdLumrDc3",
-      id: 0,
-    },
-  },
-  {
-    label: "Symmetric",
-    value: "SYMM",
-    description: "KT1JA3UQ6R4C84mH3FqS3G5mKFeEdLumrDc31",
-    icon: "https://assets.coingecko.com/coins/images/18525/small/SYMM-Coin-2.png?1632276841",
-    token: {
-      address: "KT1JA3UQ6R4C84mH3FqS3G5mKFeEdLumrDc3",
-      id: 1,
-    },
-  },
-  {
-    label: "SIRS",
-    value: "SIRS",
-    description: "KT1JA3UQ6R4C84mH3FqS3G5mKFeEdLumrDc32",
-    icon: "https://services.tzkt.io/v1/avatars/KT1AafHA1C1vk959wvHWBispY9Y2f3fxBUUo",
-    token: {
-      address: "KT1JA3UQ6R4C84mH3FqS3G5mKFeEdLumrDc3",
-      id: 2,
-    },
-  },
-  {
-    label: "tzBTC",
-    value: "tzBTC",
-    description: "KT1JA3UQ6R4C84mH3FqS3G5mKFeEdLumrDc33",
-    icon: "https://services.tzkt.io/v1/avatars/KT1PWx2mnDueood7fEmfbBDKx1D9BAnnXitn",
-    token: {
-      address: "KT1JA3UQ6R4C84mH3FqS3G5mKFeEdLumrDc3",
-      id: 3,
-    },
-  },
-  {
-    label: "EURL",
-    value: "EURL",
-    description: "KT1JA3UQ6R4C84mH3FqS3G5mKFeEdLumrDc34",
-    icon: "https://services.tzkt.io/v1/avatars/KT1JBNFcB5tiycHNdYGYCtR3kk6JaJysUCi8",
-    token: {
-      address: "KT1JA3UQ6R4C84mH3FqS3G5mKFeEdLumrDc3",
-      id: 4,
-    },
-  },
-  {
-    label: "KUSD",
-    value: "KUSD",
-    description: "KT1JA3UQ6R4C84mH3FqS3G5mKFeEdLumrDc35",
-    icon: "https://services.tzkt.io/v1/avatars/KT1K9gCRgaLRFKTErYt1wVxA3Frb9FjasjTV",
-    token: {
-      address: "KT1JA3UQ6R4C84mH3FqS3G5mKFeEdLumrDc3",
-      id: 5,
-    },
-  },
-  {
-    label: "WTZ",
-    value: "WTZ",
-    description: "KT1JA3UQ6R4C84mH3FqS3G5mKFeEdLumrDc36",
-    icon: "https://services.tzkt.io/v1/avatars/KT1PnUZCp3u2KzWr93pn4DD7HAJnm3rWVrgn",
-    token: {
-      address: "KT1JA3UQ6R4C84mH3FqS3G5mKFeEdLumrDc3",
-      id: 6,
-    },
-  },
-  {
-    label: "wUSDC",
-    value: "wUSDC",
-    description: "KT1JA3UQ6R4C84mH3FqS3G5mKFeEdLumrDc37",
-    icon: "https://thumbs.dipdup.net/QmQfHU9mYLRDU4yh2ihm3zrvVFxDrLPiXNYtMovUQE2S2t",
-    token: {
-      address: "KT1JA3UQ6R4C84mH3FqS3G5mKFeEdLumrDc3",
-      id: 7,
-    },
-  },
-];
+const tokens = computed(() => useRepo(Token).all());
 
-const optionsInRef = ref(options);
-const optionsOutRef = ref(
-  options.filter((o) => {
-    return o.value !== "CTez";
+const client = await dappClient().getDAppClient();
+const account = await client.getActiveAccount();
+const wallet = useRepo(Wallet).find(account!.address);
+if (!wallet) {
+  useRepo(Wallet).save({
+    id: account!.address,
+    walletKey: account!.walletKey,
+    lastConnected: account!.connectedAt,
+    slippage: "0.5",
+  });
+}
+await tokenRepo.fetchUserBalances(useRepo(Wallet).find(account!.address)!.id);
+
+const options = computed(() =>
+  tokens.value.map((t) => {
+    return {
+      label: t.symbol,
+      value: t.symbol,
+      description: t.id,
+      icon: t.icon,
+      token: {
+        address: t.address,
+        id: t.token_id,
+        decimals: t.decimals,
+      },
+      balance: t.formatBalance(),
+    };
   })
 );
 
-const tokenIn = ref<any>(options[0]);
+// [
+//   {
+//     label: "CTez",
+//     value: "CTez",
+//     description: "KT1JA3UQ6R4C84mH3FqS3G5mKFeEdLumrDc30",
+//     icon: "https://thumbs.dipdup.net/Qme4ybadbY4H84h5WLPjdo47YQUxxVoJHWZrwYq2JZriM4",
+//     token: {
+//       address: "KT1JA3UQ6R4C84mH3FqS3G5mKFeEdLumrDc3",
+//       id: 0,
+//     },
+//   },
+//   {
+//     label: "Symmetric",
+//     value: "SYMM",
+//     description: "KT1JA3UQ6R4C84mH3FqS3G5mKFeEdLumrDc31",
+//     icon: "https://assets.coingecko.com/coins/images/18525/small/SYMM-Coin-2.png?1632276841",
+//     token: {
+//       address: "KT1JA3UQ6R4C84mH3FqS3G5mKFeEdLumrDc3",
+//       id: 1,
+//     },
+//   },
+//   {
+//     label: "SIRS",
+//     value: "SIRS",
+//     description: "KT1JA3UQ6R4C84mH3FqS3G5mKFeEdLumrDc32",
+//     icon: "https://services.tzkt.io/v1/avatars/KT1AafHA1C1vk959wvHWBispY9Y2f3fxBUUo",
+//     token: {
+//       address: "KT1JA3UQ6R4C84mH3FqS3G5mKFeEdLumrDc3",
+//       id: 2,
+//     },
+//   },
+//   {
+//     label: "tzBTC",
+//     value: "tzBTC",
+//     description: "KT1JA3UQ6R4C84mH3FqS3G5mKFeEdLumrDc33",
+//     icon: "https://services.tzkt.io/v1/avatars/KT1PWx2mnDueood7fEmfbBDKx1D9BAnnXitn",
+//     token: {
+//       address: "KT1JA3UQ6R4C84mH3FqS3G5mKFeEdLumrDc3",
+//       id: 3,
+//     },
+//   },
+//   {
+//     label: "EURL",
+//     value: "EURL",
+//     description: "KT1JA3UQ6R4C84mH3FqS3G5mKFeEdLumrDc34",
+//     icon: "https://services.tzkt.io/v1/avatars/KT1JBNFcB5tiycHNdYGYCtR3kk6JaJysUCi8",
+//     token: {
+//       address: "KT1JA3UQ6R4C84mH3FqS3G5mKFeEdLumrDc3",
+//       id: 4,
+//     },
+//   },
+//   {
+//     label: "KUSD",
+//     value: "KUSD",
+//     description: "KT1JA3UQ6R4C84mH3FqS3G5mKFeEdLumrDc35",
+//     icon: "https://services.tzkt.io/v1/avatars/KT1K9gCRgaLRFKTErYt1wVxA3Frb9FjasjTV",
+//     token: {
+//       address: "KT1JA3UQ6R4C84mH3FqS3G5mKFeEdLumrDc3",
+//       id: 5,
+//     },
+//   },
+//   {
+//     label: "WTZ",
+//     value: "WTZ",
+//     description: "KT1JA3UQ6R4C84mH3FqS3G5mKFeEdLumrDc36",
+//     icon: "https://services.tzkt.io/v1/avatars/KT1PnUZCp3u2KzWr93pn4DD7HAJnm3rWVrgn",
+//     token: {
+//       address: "KT1JA3UQ6R4C84mH3FqS3G5mKFeEdLumrDc3",
+//       id: 6,
+//     },
+//   },
+//   {
+//     label: "wUSDC",
+//     value: "wUSDC",
+//     description: "KT1JA3UQ6R4C84mH3FqS3G5mKFeEdLumrDc37",
+//     icon: "https://thumbs.dipdup.net/QmQfHU9mYLRDU4yh2ihm3zrvVFxDrLPiXNYtMovUQE2S2t",
+//     token: {
+//       address: "KT1JA3UQ6R4C84mH3FqS3G5mKFeEdLumrDc3",
+//       id: 7,
+//     },
+//   },
+// ];
+const tokenIn = ref<any>(options.value[0]);
 const tokenOut = ref<any>(null);
 
+const optionsInRef = ref(options);
+const optionsOutRef = computed(() =>
+  options.value.filter((o) => {
+    return o.value !== tokenIn.value.value;
+  })
+);
+
 const amountIn = ref(null);
-const amountOut = ref(null);
-
-const updateTokenIn = (val: any) => {
-  optionsOutRef.value = options.filter((o) => {
-    return o.value !== val.value;
-  });
-
-  tokenIn.value = val;
-};
 
 const pool = computed(() => {
   return useRepo(Pool)
     .with("pool_tokens")
-    .find("KT1ADiYeVqgr4xmVpcBatTQG3eopRRNGZj8k");
+    .find("KT1VHbP2ska1R5goBCER1W8n1CNDKRPXSpn1");
 });
 
 const loading = ref(false);
+
+const amountOut = computed(() => {
+  if (tokenIn.value && tokenOut.value && amountIn.value) {
+    const token_in = pool.value?.pool_tokens.find(
+      (t) =>
+        t.address === tokenIn.value.token.address &&
+        t.pool_token_id === tokenIn.value.token.id
+    );
+    const token_out = pool.value?.pool_tokens.find(
+      (t) =>
+        t.address === tokenOut.value.token.address &&
+        t.pool_token_id === tokenOut.value.token.id
+    );
+    const amount = calcSwapAmountOut(
+      amountIn.value!,
+      token_in!.balance,
+      token_out!.balance,
+      { decimals: token_in!.decimals, weight: token_in!.weight },
+      { decimals: token_out!.decimals, weight: token_out!.weight },
+      pool.value!.swap_fee
+    );
+
+    return amount;
+  }
+  return null;
+});
 
 const swap = async () => {
   loading.value = true;

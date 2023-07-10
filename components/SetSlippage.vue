@@ -4,7 +4,6 @@
       dark
       outline
       dense
-      fab-mini
       dropdown-icon="none"
       icon="tune"
       class="tx-settings"
