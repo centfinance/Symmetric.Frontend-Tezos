@@ -193,7 +193,7 @@ export async function fa2UpdateOperators(
           },
         ])
         .toTransferParams(),
-    } as WalletParamsWithKind;
+    };
   });
 
   return {

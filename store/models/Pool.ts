@@ -49,12 +49,12 @@ export class Pool extends Model {
   async getUserBalances(user: string) {
     const tokens = this.pool_tokens.map((t) => {
       return {
-        contract: t.address,
-        tokenId: t.pool_token_id,
+        address: t.address,
+        token_id: t.pool_token_id,
         id: t.id,
       };
     });
-
+    console.log(tokens);
     const balances = await getBalanceFromTzkt(tokens, user);
 
     if (balances.success) {

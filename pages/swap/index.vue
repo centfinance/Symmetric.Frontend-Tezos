@@ -10,7 +10,6 @@
           <q-input
             dark
             v-model="amountIn"
-            debounce="500"
             borderless
             placeholder="0.00"
             input-class="focus:ring-0 focus:ring-offset-0 text-3xl"
@@ -51,6 +50,26 @@
           <div v-if="tokenOut">Balance: {{ tokenOut?.balance }}</div>
         </div>
       </div>
+      <div class="p-4 mt-4">
+        <q-card dark>
+          <div
+            class="p-4 flex flex-col text-2xl items-center"
+            v-if="confirmationRef"
+          >
+            <div>Swap Completed 🎉</div>
+            <div class="text-sm">
+              <a
+                :href="`https://ghostnet.tzkt.io/${
+                  confirmationRef.operations.at(-1).at(-1).hash
+                }`"
+                target="_blank"
+                >{{ confirmationRef.operations.at(-1).at(-1).hash }}</a
+              >
+            </div>
+          </div>
+          <q-skeleton v-if="loading" type="text"></q-skeleton>
+        </q-card>
+      </div>
       <div>
         <q-btn
           :loading="loading"
@@ -73,7 +92,7 @@
 </template>
 
 <script lang="ts" setup>
-import { OpKind, WalletParamsWithKind } from "@taquito/taquito";
+import { OpKind, ParamsWithKind, WalletParamsWithKind } from "@taquito/taquito";
 import { BigNumber } from "bignumber.js";
 import { Pool } from "~/store/models/Pool";
 import { Wallet } from "~/store/models/Wallet";
@@ -81,11 +100,19 @@ import { Token } from "~/store/models/Token";
 import { TokenRepository } from "~/store/repositories/TokenRepository";
 import { calcSwapAmountOut } from "~/composables/useSwap";
 
+import type { BlockResponse } from "@taquito/rpc";
+
 const tokenRepo = useRepo(TokenRepository);
 
 await tokenRepo.fetch();
 
-const tokens = computed(() => useRepo(Token).all());
+const tokens = computed(() =>
+  useRepo(Token)
+    .where("token_id", (id: any) => {
+      return !isNaN(Number(id));
+    })
+    .get()
+);
 
 const client = await dappClient().getDAppClient();
 const account = await client.getActiveAccount();
@@ -117,88 +144,6 @@ const options = computed(() =>
   })
 );
 
-// [
-//   {
-//     label: "CTez",
-//     value: "CTez",
-//     description: "KT1JA3UQ6R4C84mH3FqS3G5mKFeEdLumrDc30",
-//     icon: "https://thumbs.dipdup.net/Qme4ybadbY4H84h5WLPjdo47YQUxxVoJHWZrwYq2JZriM4",
-//     token: {
-//       address: "KT1JA3UQ6R4C84mH3FqS3G5mKFeEdLumrDc3",
-//       id: 0,
-//     },
-//   },
-//   {
-//     label: "Symmetric",
-//     value: "SYMM",
-//     description: "KT1JA3UQ6R4C84mH3FqS3G5mKFeEdLumrDc31",
-//     icon: "https://assets.coingecko.com/coins/images/18525/small/SYMM-Coin-2.png?1632276841",
-//     token: {
-//       address: "KT1JA3UQ6R4C84mH3FqS3G5mKFeEdLumrDc3",
-//       id: 1,
-//     },
-//   },
-//   {
-//     label: "SIRS",
-//     value: "SIRS",
-//     description: "KT1JA3UQ6R4C84mH3FqS3G5mKFeEdLumrDc32",
-//     icon: "https://services.tzkt.io/v1/avatars/KT1AafHA1C1vk959wvHWBispY9Y2f3fxBUUo",
-//     token: {
-//       address: "KT1JA3UQ6R4C84mH3FqS3G5mKFeEdLumrDc3",
-//       id: 2,
-//     },
-//   },
-//   {
-//     label: "tzBTC",
-//     value: "tzBTC",
-//     description: "KT1JA3UQ6R4C84mH3FqS3G5mKFeEdLumrDc33",
-//     icon: "https://services.tzkt.io/v1/avatars/KT1PWx2mnDueood7fEmfbBDKx1D9BAnnXitn",
-//     token: {
-//       address: "KT1JA3UQ6R4C84mH3FqS3G5mKFeEdLumrDc3",
-//       id: 3,
-//     },
-//   },
-//   {
-//     label: "EURL",
-//     value: "EURL",
-//     description: "KT1JA3UQ6R4C84mH3FqS3G5mKFeEdLumrDc34",
-//     icon: "https://services.tzkt.io/v1/avatars/KT1JBNFcB5tiycHNdYGYCtR3kk6JaJysUCi8",
-//     token: {
-//       address: "KT1JA3UQ6R4C84mH3FqS3G5mKFeEdLumrDc3",
-//       id: 4,
-//     },
-//   },
-//   {
-//     label: "KUSD",
-//     value: "KUSD",
-//     description: "KT1JA3UQ6R4C84mH3FqS3G5mKFeEdLumrDc35",
-//     icon: "https://services.tzkt.io/v1/avatars/KT1K9gCRgaLRFKTErYt1wVxA3Frb9FjasjTV",
-//     token: {
-//       address: "KT1JA3UQ6R4C84mH3FqS3G5mKFeEdLumrDc3",
-//       id: 5,
-//     },
-//   },
-//   {
-//     label: "WTZ",
-//     value: "WTZ",
-//     description: "KT1JA3UQ6R4C84mH3FqS3G5mKFeEdLumrDc36",
-//     icon: "https://services.tzkt.io/v1/avatars/KT1PnUZCp3u2KzWr93pn4DD7HAJnm3rWVrgn",
-//     token: {
-//       address: "KT1JA3UQ6R4C84mH3FqS3G5mKFeEdLumrDc3",
-//       id: 6,
-//     },
-//   },
-//   {
-//     label: "wUSDC",
-//     value: "wUSDC",
-//     description: "KT1JA3UQ6R4C84mH3FqS3G5mKFeEdLumrDc37",
-//     icon: "https://thumbs.dipdup.net/QmQfHU9mYLRDU4yh2ihm3zrvVFxDrLPiXNYtMovUQE2S2t",
-//     token: {
-//       address: "KT1JA3UQ6R4C84mH3FqS3G5mKFeEdLumrDc3",
-//       id: 7,
-//     },
-//   },
-// ];
 const tokenIn = ref<any>(options.value[0]);
 const tokenOut = ref<any>(null);
 
@@ -210,6 +155,8 @@ const optionsOutRef = computed(() =>
 );
 
 const amountIn = ref(null);
+
+const estimate = ref<any>(null);
 
 const pool = computed(() => {
   return useRepo(Pool)
@@ -245,6 +192,53 @@ const amountOut = computed(() => {
   return null;
 });
 
+// watch(amountIn, async () => {
+//   if (
+//     tokenIn.value &&
+//     tokenOut.value &&
+//     tokenIn.value !== tokenOut.value &&
+//     amountIn.value
+//   ) {
+//     const tezos = await dappClient().tezos();
+//     const client = await dappClient().getDAppClient();
+//     const account = await client.getActiveAccount();
+//     const wallet = useRepo(Wallet).find(account!.address);
+//     const request = await createSwapRequest(
+//       tezos,
+//       pool.value!,
+//       tokenIn.value.token,
+//       tokenOut.value.token,
+//       BigNumber(BigNumber(amountIn.value!).toFixed(18)).multipliedBy(10 ** 18),
+//       wallet!.id,
+//       wallet!.slippage
+//     );
+//     const params = request.toTransferParams();
+
+//     const operatorCalls = await fa2UpdateOperators(
+//       tezos,
+//       wallet!.id,
+//       pool.value!.pool_tokens[0].address,
+//       [tokenIn.value.token.id],
+//       "KT1N5qYdthynXLfGbteRVHgKy4m6q2NGjt57"
+//     );
+
+//     const contractCall: ParamsWithKind = {
+//       kind: OpKind.TRANSACTION,
+//       ...params!,
+//     };
+//     const transactions = [];
+
+//     transactions.push(...(operatorCalls.approveRequests as ParamsWithKind[]));
+//     transactions.push(contractCall);
+//     transactions.push(...(operatorCalls.revokeRequests as ParamsWithKind[]));
+//     const estimates = await tezos.estimate.batch(transactions);
+//     console.log(estimates);
+//     estimate.value = estimates[1];
+//     console.log(estimate.value);
+//   }
+//   estimate.value = null;
+// });
+const confirmationRef = ref<any>(null);
 const swap = async () => {
   loading.value = true;
   try {
@@ -288,6 +282,8 @@ const swap = async () => {
       const tx = await batch.send();
       const confirmation = await tx.confirmation();
       console.log(confirmation);
+      confirmationRef.value = confirmation.block;
+      amountIn.value = null;
     }
   } catch (e: any) {}
   loading.value = false;

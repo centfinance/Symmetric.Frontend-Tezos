@@ -54,7 +54,10 @@ export class TokenRepository extends Repository {
   }
 
   async fetchUserBalances(user: string) {
-    const tokens = this.all();
+    const tokens = this.where("token_id", (id: any) => {
+      return !isNaN(Number(id));
+    }).get();
+
     const data = await getBalanceFromTzkt(tokens, user);
     this.save(data.balances);
   }

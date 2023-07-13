@@ -19,11 +19,18 @@ export const calcSwapAmountOut = (
   swapFee: number
 ): BigNumber => {
   const ONE = 1 * 10 ** 18;
+
   const Bi = parseFloat(
-    formatFixed((balance_in * ONE).toString(), tokenIn.decimals)
+    formatFixed(
+      BigNumber(balance_in).multipliedBy(ONE).toString(),
+      tokenIn.decimals
+    )
   );
   const Bo = parseFloat(
-    formatFixed((balance_out * ONE).toString(), tokenOut.decimals)
+    formatFixed(
+      BigNumber(balance_out).multipliedBy(ONE).toString(),
+      tokenOut.decimals
+    )
   );
 
   const wi = parseFloat(tokenIn.weight.toString());
@@ -77,7 +84,7 @@ export const createSwapRequest = async (
     },
   };
 
-  const vault = await tezos.contract.at("KT1N5qYdthynXLfGbteRVHgKy4m6q2NGjt57");
+  const vault = await tezos.contract.at("KT1MokJei8PpsdFCgvTPnC8zDWkpiryYNvsK");
   console.log(vault);
   const swapRequest = vault.methods.swap(
     tas.timestamp(addMinutes(new Date(), 30).toISOString()),
