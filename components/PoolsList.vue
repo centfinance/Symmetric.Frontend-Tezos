@@ -50,6 +50,7 @@
               <q-td>
                 <q-btn
                   label="Manage"
+                  :disable="!connected"
                   no-caps
                   color="black"
                   @click="openPoolDialog(props.row.address)"
@@ -105,10 +106,9 @@ const columns = [
   },
 ];
 
-const onPoolClick = (address: string) => {
-  const router = useRouter();
-  router.push(`/pools/${address}`);
-};
+const client = await dappClient().getDAppClient();
+const active = ref(await client.getActiveAccount());
+const connected = computed(() => (active.value ? true : false));
 
 const selectedPool = ref<string | null>(null);
 

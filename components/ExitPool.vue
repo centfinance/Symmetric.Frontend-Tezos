@@ -82,6 +82,24 @@
       </div>
     </div>
   </div>
+  <div v-if="loading || confirmationRef" class="p-4 mt-8 bg-gray-900">
+    <div
+      class="p-4 flex flex-col text-2xl items-center gap-2"
+      v-if="confirmationRef"
+    >
+      <div>Liquidity Removed 🎉</div>
+      <div class="text-sm text-blue-500">
+        <a
+          :href="`https://ghostnet.tzkt.io/${
+            confirmationRef.operations.at(-1).at(-1).hash
+          }`"
+          target="_blank"
+          >{{ confirmationRef.operations.at(-1).at(-1).hash }}</a
+        >
+      </div>
+    </div>
+    <q-skeleton v-if="loading" type="text"></q-skeleton>
+  </div>
   <q-card-actions align="center">
     <q-btn
       :loading="loading"
@@ -166,6 +184,7 @@ const estAmounts = computed(() => {
     })
   );
 });
+const confirmationRef = ref<any>(null);
 
 const onConfirm = async () => {
   loading.value = true;
@@ -194,6 +213,8 @@ const onConfirm = async () => {
     const tx = await request!.send();
     const confirmation = await tx.confirmation();
     console.log(confirmation);
+    confirmationRef.value = confirmation.block;
+    inputValue.value = undefined;
     // reset inputs
     // display confirmation
   } catch (e: any) {

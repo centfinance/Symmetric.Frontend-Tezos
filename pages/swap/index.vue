@@ -26,7 +26,7 @@
         </div>
       </div>
       <div class="mx-auto">
-        <q-btn dark round icon="arrow_downward" />
+        <q-btn dark round icon="arrow_downward" @click="switchTokens" />
       </div>
       <div class="bg-grey-10 rounded p-4 flex justify-between">
         <div>
@@ -50,30 +50,28 @@
           <div v-if="tokenOut">Balance: {{ tokenOut?.balance }}</div>
         </div>
       </div>
-      <div class="p-4 mt-4">
-        <q-card dark>
-          <div
-            class="p-4 flex flex-col text-2xl items-center"
-            v-if="confirmationRef"
-          >
-            <div>Swap Completed 🎉</div>
-            <div class="text-sm">
-              <a
-                :href="`https://ghostnet.tzkt.io/${
-                  confirmationRef.operations.at(-1).at(-1).hash
-                }`"
-                target="_blank"
-                >{{ confirmationRef.operations.at(-1).at(-1).hash }}</a
-              >
-            </div>
+      <div v-if="loading || confirmationRef" class="p-4 mt-8 bg-gray-900">
+        <div
+          class="p-4 flex flex-col text-2xl items-center gap-2"
+          v-if="confirmationRef"
+        >
+          <div>Swap Completed 🎉</div>
+          <div class="text-sm text-blue-500">
+            <a
+              :href="`https://ghostnet.tzkt.io/${
+                confirmationRef.operations.at(-1).at(-1).hash
+              }`"
+              target="_blank"
+              >{{ confirmationRef.operations.at(-1).at(-1).hash }}</a
+            >
           </div>
-          <q-skeleton v-if="loading" type="text"></q-skeleton>
-        </q-card>
+        </div>
+        <q-skeleton v-if="loading" type="text"></q-skeleton>
       </div>
-      <div>
+      <div class="mt-8">
         <q-btn
           :loading="loading"
-          color="black"
+          color="orange"
           spread
           no-caps
           text-color="white"
@@ -92,15 +90,13 @@
 </template>
 
 <script lang="ts" setup>
-import { OpKind, ParamsWithKind, WalletParamsWithKind } from "@taquito/taquito";
+import { OpKind, WalletParamsWithKind } from "@taquito/taquito";
 import { BigNumber } from "bignumber.js";
 import { Pool } from "~/store/models/Pool";
 import { Wallet } from "~/store/models/Wallet";
 import { Token } from "~/store/models/Token";
 import { TokenRepository } from "~/store/repositories/TokenRepository";
 import { calcSwapAmountOut } from "~/composables/useSwap";
-
-import type { BlockResponse } from "@taquito/rpc";
 
 const tokenRepo = useRepo(TokenRepository);
 
@@ -116,6 +112,8 @@ const tokens = computed(() =>
 
 const client = await dappClient().getDAppClient();
 const account = await client.getActiveAccount();
+if (!account) {
+}
 const wallet = useRepo(Wallet).find(account!.address);
 if (!wallet) {
   useRepo(Wallet).save({
@@ -191,6 +189,14 @@ const amountOut = computed(() => {
   }
   return null;
 });
+
+const switchTokens = () => {
+  if (tokenIn.value && tokenOut.value) {
+    const oldToken = tokenIn.value;
+    tokenIn.value = tokenOut.value;
+    tokenOut.value = oldToken;
+  }
+};
 
 // watch(amountIn, async () => {
 //   if (

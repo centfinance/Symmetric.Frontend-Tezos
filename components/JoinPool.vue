@@ -71,6 +71,24 @@
             </q-btn>
           </template>
         </q-input>
+        <div v-if="loading || confirmationRef" class="p-4 mt-8 bg-gray-900">
+          <div
+            class="p-4 flex flex-col text-2xl items-center gap-2"
+            v-if="confirmationRef"
+          >
+            <div>Liquidity Added 🎉</div>
+            <div class="text-sm text-blue-500">
+              <a
+                :href="`https://ghostnet.tzkt.io/${
+                  confirmationRef.operations.at(-1).at(-1).hash
+                }`"
+                target="_blank"
+                >{{ confirmationRef.operations.at(-1).at(-1).hash }}</a
+              >
+            </div>
+          </div>
+          <q-skeleton v-if="loading" type="text"></q-skeleton>
+        </div>
         <q-btn
           :loading="loading"
           color="black"
@@ -172,6 +190,7 @@ const price = computed(() => {
 });
 
 const loading = ref(false);
+const confirmationRef = ref<any>(null);
 
 const addLiquidity = async () => {
   loading.value = true;
@@ -214,6 +233,8 @@ const addLiquidity = async () => {
     const tx = await batch.send();
     const confirmation = await tx.confirmation();
     console.log(confirmation);
+    confirmationRef.value = confirmation.block;
+    amounts.forEach((a, i) => (amounts[i].value = undefined));
     // reset inputs
     // display confirmation
   } catch (e: any) {
