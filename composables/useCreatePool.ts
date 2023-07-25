@@ -50,7 +50,7 @@ export const createPoolRequest = async (
           key: tas.nat(i),
           value: {
             0: tas.address(t.address),
-            1: t.id ? tas.nat(t.id) : undefined,
+            1: t.id !== null ? tas.nat(t.id) : undefined,
           },
         };
       })

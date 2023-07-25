@@ -1,13 +1,23 @@
 <template>
   <div class="q-pa-md">
-    <q-stepper v-model="step" dark vertical color="primary" animated>
-      <q-step :name="1" title="Select Tokens" icon="settings" :done="step > 1">
+    <q-stepper
+      v-model="step"
+      dark
+      flat
+      vertical
+      done-color="white"
+      active-color="orange"
+      animated
+    >
+      <q-step :name="1" title="Select Tokens" prefix="1" :done="step > 1">
         <div>
           <q-select
+            ref="selectInput"
             filled
             dark
             v-model="tokens"
             :options="options"
+            color="orange"
             label="Select Tokens"
             counter
             max-values="8"
@@ -15,6 +25,10 @@
             multiple
             map-options
             use-chips
+            :rules="[
+              (val: any) => val || 'Please select at least 2 tokens',
+              (val: any) => val.length > 1 || 'Please select at least 2 tokens',
+            ]"
           >
             <template
               v-slot:option="{ itemProps, opt, selected, toggleOption }"
@@ -26,6 +40,7 @@
                 <q-item-section side>
                   <q-toggle
                     :model-value="selected"
+                    color="orange"
                     @update:model-value="toggleOption(opt)"
                   />
                 </q-item-section>
@@ -35,15 +50,19 @@
         </div>
 
         <q-stepper-navigation>
-          <q-btn @click="onSelectTokens" color="primary" label="Continue" />
+          <q-btn
+            @click="onSelectTokens"
+            no-caps
+            color="orange"
+            label="Continue"
+          />
         </q-stepper-navigation>
       </q-step>
 
       <q-step
         :name="2"
         title="Select Token Weights"
-        caption="Optional"
-        icon="acale"
+        prefix="2"
         :done="step > 2"
       >
         <div class="grid grid-rows-2 grid-flow-col gap-4">
@@ -52,6 +71,7 @@
             <q-input
               filled
               dark
+              color="orange"
               suffix="%"
               v-model="weights[i].value"
               input-class="text-right focus:ring-0 focus:ring-offset-0"
@@ -60,24 +80,31 @@
         </div>
 
         <q-stepper-navigation>
-          <q-btn @click="onSelectWeights" color="primary" label="Continue" />
+          <q-btn
+            @click="onSelectWeights"
+            no-caps
+            color="orange"
+            label="Continue"
+          />
           <q-btn
             flat
+            no-caps
             @click="step = 1"
-            color="primary"
+            color="orange"
             label="Back"
             class="q-ml-sm"
           />
         </q-stepper-navigation>
       </q-step>
 
-      <q-step :name="3" title="Set Swap Fee" icon="assignment">
+      <q-step :name="3" title="Set Swap Fee" prefix="3" :done="step > 3">
         <q-input
           filled
           dark
           ref="swapFeeInput"
           v-model="swapFee"
           type="number"
+          color="orange"
           fill-mask="0"
           reverse-fill-mask
           hint="Max 10%"
@@ -88,32 +115,108 @@
           ]"
           lazy-rules="ondemand"
         />
+        <div v-if="loading || confirmationRef" class="p-4 mt-8 bg-gray-900">
+          <div
+            class="p-4 flex flex-col text-2xl items-center gap-2"
+            v-if="confirmationRef && pool"
+          >
+            <div>Pool Created! 🎉</div>
+            <div class="text-sm text-blue-500">
+              <a
+                :href="`https://ghostnet.tzkt.io/${
+                  confirmationRef.operations.at(-1).at(-1).hash
+                }`"
+                target="_blank"
+                >{{ confirmationRef.operations.at(-1).at(-1).hash }}</a
+              >
+            </div>
+            <div>Pool address: {{ pool.address }}</div>
+          </div>
+          <q-skeleton v-if="loading" type="text"></q-skeleton>
+        </div>
         <q-stepper-navigation>
-          <q-btn @click="onSetSwapFee" color="primary" label="Continue" />
-          <q-btn
-            flat
-            @click="step = 2"
-            color="primary"
-            label="Back"
-            class="q-ml-sm"
-          />
+          <div class="flex flex-row">
+            <q-btn
+              v-if="confirmationRef === null"
+              :loading="loading"
+              @click="onSetSwapFee"
+              no-caps
+              color="orange"
+              label="Create Pool"
+            />
+            <q-btn
+              v-else
+              @click="step = 4"
+              no-caps
+              color="orange"
+              label="Continue"
+            />
+            <div v-if="!loading && !confirmationRef">
+              <q-btn
+                flat
+                @click="step = 2"
+                no-caps
+                color="orange"
+                label="Back"
+                class="q-ml-sm"
+              />
+            </div>
+          </div>
         </q-stepper-navigation>
       </q-step>
 
-      <q-step :name="4" title="Add Initial Liquidity" icon="add_comment">
-        Try out different ad text to see what brings in the most customers, and
-        learn how to enhance your ads using features like ad extensions. If you
-        run into any problems with your ads, find out how to tell if they're
-        running and how to resolve approval issues.
-
+      <q-step
+        :name="4"
+        title="Add Initial Liquidity"
+        prefix="4"
+        caption="Optional"
+      >
+        <div class="grid grid-cols-2 grid-flow-row gap-4">
+          <div v-for="(token, i) in tokens">
+            {{ i }}
+            <q-input
+              :ref="inputRefs[i]"
+              filled
+              dark
+              color="orange"
+              :suffix="token.value"
+              placeholder="0.00"
+              v-model="amounts[i].value"
+              input-class="focus:ring-0 focus:ring-offset-0"
+              :rules="[
+                (val: any) => val > 0 || 'No amount entered',
+                // (val: any) =>
+                //   val <= poolTokens[token.index].normalizedBalance() ||
+                //   'Not enough Balance',
+              ]"
+              lazy-rules="ondemand"
+            />
+          </div>
+        </div>
+        <div v-if="loading || addLiquidityConfirm" class="p-4 mt-8 bg-gray-900">
+          <div
+            class="p-4 flex flex-col text-2xl items-center gap-2"
+            v-if="addLiquidityConfirm"
+          >
+            <div>Added Liquidity! 🎉</div>
+            <div class="text-sm text-blue-500">
+              <a
+                :href="`https://ghostnet.tzkt.io/${
+                  confirmationRef.operations.at(-1).at(-1).hash
+                }`"
+                target="_blank"
+                >{{ confirmationRef.operations.at(-1).at(-1).hash }}</a
+              >
+            </div>
+          </div>
+          <q-skeleton v-if="loading" type="text"></q-skeleton>
+        </div>
         <q-stepper-navigation>
-          <q-btn color="primary" label="Finish" />
           <q-btn
-            flat
-            @click="step = 3"
-            color="primary"
-            label="Back"
-            class="q-ml-sm"
+            no-caps
+            color="orange"
+            label="Add Liqudity"
+            @click="onAddLiquidity"
           />
         </q-stepper-navigation>
       </q-step>
@@ -124,6 +227,7 @@
 <script lang="ts" setup>
 import { BigNumber } from "bignumber.js";
 import { useCreatePool } from "~/composables/useCreatePool";
+import { encodePubKey } from "@taquito/utils";
 
 const step = ref(1);
 
@@ -140,49 +244,49 @@ const options = ref([
     label: "SYMM",
     value: "SYMM",
     address: "KT1JA3UQ6R4C84mH3FqS3G5mKFeEdLumrDc3",
-    id: 0,
+    id: 1,
     decimals: 18,
   },
   {
     label: "SIRS",
     value: "SIRS",
     address: "KT1JA3UQ6R4C84mH3FqS3G5mKFeEdLumrDc3",
-    id: 0,
+    id: 2,
     decimals: 18,
   },
   {
     label: "TZBTC",
     value: "TZBTC",
     address: "KT1JA3UQ6R4C84mH3FqS3G5mKFeEdLumrDc3",
-    id: 0,
+    id: 3,
     decimals: 18,
   },
   {
     label: "EURL",
     value: "EURL",
     address: "KT1JA3UQ6R4C84mH3FqS3G5mKFeEdLumrDc3",
-    id: 0,
+    id: 4,
     decimals: 18,
   },
   {
     label: "KUSD",
     value: "KUSD",
     address: "KT1JA3UQ6R4C84mH3FqS3G5mKFeEdLumrDc3",
-    id: 0,
+    id: 5,
     decimals: 18,
   },
   {
     label: "WTZ",
     value: "WTZ",
     address: "KT1JA3UQ6R4C84mH3FqS3G5mKFeEdLumrDc3",
-    id: 0,
+    id: 6,
     decimals: 18,
   },
   {
     label: "WUSDC",
     value: "WUSDC",
     address: "KT1JA3UQ6R4C84mH3FqS3G5mKFeEdLumrDc3",
-    id: 0,
+    id: 7,
     decimals: 18,
   },
 ]);
@@ -191,7 +295,6 @@ const a = new Array(8).fill(0);
 const weights = a.map((i) => {
   return ref<string>("0");
 });
-console.log(weights);
 
 const weightMap = {
   2: "50",
@@ -202,28 +305,29 @@ const weightMap = {
   7: "14.2857142857",
   8: "12.5",
 };
-
+const selectInput = ref<any>(null);
 const swapFee = ref(0.5);
 const swapFeeInput = ref<any>(null);
+const amounts: Ref<string | undefined>[] = [];
+const inputRefs = ref<Ref<any>[]>([]);
 
 const onSelectTokens = () => {
-  if (!tokens.value || tokens.value.length < 2) {
-    console.log("select at lest two tokens");
+  if (selectInput.value.validate()) {
+    const weight: any = weightMap[tokens.value.length];
+
+    tokens.value.forEach((t: any, i: any) => {
+      weights[i].value = weight;
+      amounts.push(ref(undefined));
+      inputRefs.value.push(ref(null));
+    });
+
+    if (tokens.value.length === 3) {
+      weights[2].value = "33.3333333333333334";
+    }
+
+    step.value = 2;
+  } else {
   }
-  const weight: any = weightMap[tokens.value.length];
-
-  tokens.value.forEach((t: any, i: any) => {
-    console.log(i);
-    weights[i].value = weight;
-  });
-
-  if (tokens.value.length === 3) {
-    weights[2].value = "33.3333333333333334";
-  }
-
-  console.log(weights);
-
-  step.value = 2;
 };
 
 const onSelectWeights = () => {
@@ -234,38 +338,100 @@ const onSelectWeights = () => {
     totalWeight = totalWeight.plus(weights[i].value);
   });
 
-  console.log(totalWeight.toNumber());
   if (totalWeight.toString() === "100") {
     step.value = 3;
+  } else {
   }
 };
 
-const onSetSwapFee = async () => {
-  swapFeeInput.value!.validate();
-  try {
-    const t = tokens.value.map((t: any) => {
-      return {
-        address: t.address,
-        id: t.id,
-        decimals: t.decimals,
-      };
-    });
+const loading = ref(false);
+const confirmationRef = ref<any>(null);
 
-    console.log(
-      weights.map((w) =>
-        BigNumber(BigNumber(w.value).toFixed(18))
-          .multipliedBy(10 ** 16)
-          .toString()
-      )
-    );
-    const tx = await useCreatePool(
-      t,
-      weights.map((w: any) => w.value),
-      BigNumber(swapFee.value)
-    );
-    const confirmation = await tx?.confirmation();
-    console.log(confirmation);
-    step.value = 4;
-  } catch (e: any) {}
+const pool = ref<{ address: string; id: any } | null>(null);
+
+const onSetSwapFee = async () => {
+  loading.value = true;
+  if (swapFeeInput.value!.validate()) {
+    try {
+      const t = tokens.value.map((t: any) => {
+        return {
+          address: t.address,
+          id: t.id,
+          decimals: t.decimals,
+        };
+      });
+
+      const tx = await useCreatePool(
+        t,
+        weights.map((w: any) => w.value),
+        BigNumber(swapFee.value)
+      );
+      const confirmation = await tx?.confirmation();
+      try {
+        const tezos = await dappClient().tezos();
+        const sub = tezos.stream.subscribeEvent({
+          tag: "PoolRegistered",
+          address: "KT1MokJei8PpsdFCgvTPnC8zDWkpiryYNvsK",
+        });
+
+        // rome-ignore lint/suspicious/noExplicitAny: <explanation>
+        function getPoolId(data: any) {
+          pool.value = {
+            address: encodePubKey(data.payload.args[0].bytes),
+            id: data.payload.args[1].args[1].int,
+          };
+          sub.close();
+        }
+
+        sub.on("data", getPoolId);
+      } catch (e) {
+        console.log(e);
+      }
+      console.log(confirmation);
+      confirmationRef.value = confirmation!.block;
+    } catch (e: any) {}
+  }
+
+  loading.value = false;
+};
+const addLiquidityConfirm = ref<any>(null);
+const onAddLiquidity = async () => {
+  loading.value = true;
+  try {
+    console.log(amounts);
+    console.log(inputRefs.value);
+    const valid = inputRefs.value.every((input, i) => {
+      console.log(i);
+      console.log(input);
+      return input.value[0].validate();
+    });
+    if (valid) {
+      const t = tokens.value.map((t: any, i: number) => {
+        return {
+          address: t.address,
+          id: t.id,
+          decimals: t.decimals,
+          index: i,
+        };
+      });
+
+      const tx = await useJoinPool(
+        pool.value!,
+        amounts.map((a: any, i: number) => {
+          return [i, BigNumber(a.value)];
+        }),
+        t,
+        0.005,
+        true
+      );
+
+      const confirmation = await tx.confirmation();
+      addLiquidityConfirm.value = confirmation.block;
+      amounts.forEach((a, i) => (amounts[i].value = undefined));
+    }
+  } catch (e: any) {
+    console.error(e);
+  }
+  loading.value = false;
 };
 </script>

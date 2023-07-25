@@ -138,6 +138,8 @@ let tokens = computed(() =>
   poolTokens.value?.map((t) => {
     return {
       id: t.id,
+      address: t.address,
+      token_id: t.pool_token_id,
       symbol: t.symbol,
       decimal: t.decimals,
       index: t.index,
@@ -146,6 +148,8 @@ let tokens = computed(() =>
     };
   })
 );
+
+console.log(tokens);
 
 const balances = computed(() =>
   pool.value?.pool_tokens.map((t) => {
@@ -196,47 +200,67 @@ const addLiquidity = async () => {
   loading.value = true;
   try {
     inputRefs.value.forEach((input, i) => input.value[i].validate());
-    const tezos = await dappClient().tezos();
     const client = await dappClient().getDAppClient();
     const account = await client.getActiveAccount();
     const wallet = useRepo(Wallet).find(account!.address);
-    const request = await createJoinRequest(
-      tezos,
-      pool.value!.address,
-      amounts.map((a, i) => [
-        i,
-        BigNumber(a.value!).multipliedBy(10 ** poolTokens.value[i].decimals),
-      ]),
-      parseInt(wallet?.slippage!)
+
+    const tokens = poolTokens.value!.map((t) => {
+      return {
+        address: t.address,
+        id: t.FA2 ? t.pool_token_id : null,
+        decimals: t.decimals,
+        index: t.index,
+      };
+    });
+
+    const tx = await useJoinPool(
+      { address: pool.value!.address, id: pool.value!.poolId },
+      amounts.map((a, i) => [i, BigNumber(a.value!)]),
+      tokens,
+      parseInt(wallet?.slippage!) / 100,
+      pool.value!.pool_shares == 0 ? true : false
     );
-    const params = request?.toTransferParams();
 
-    const operatorCalls = await fa2UpdateOperators(
-      tezos,
-      wallet!.id,
-      pool.value!.pool_tokens[0].address,
-      pool.value!.pool_tokens.map((t) => t.pool_token_id),
-      "KT1N5qYdthynXLfGbteRVHgKy4m6q2NGjt57"
-    );
-
-    const contractCall: WalletParamsWithKind = {
-      kind: OpKind.TRANSACTION,
-      ...params!,
-    };
-    const transactions = [];
-
-    transactions.push(...operatorCalls.approveRequests);
-    transactions.push(contractCall);
-    transactions.push(...operatorCalls.revokeRequests);
-
-    const batch = tezos.wallet.batch(transactions);
-    const tx = await batch.send();
     const confirmation = await tx.confirmation();
     console.log(confirmation);
     confirmationRef.value = confirmation.block;
     amounts.forEach((a, i) => (amounts[i].value = undefined));
-    // reset inputs
-    // display confirmation
+
+    // const request = await createJoinRequest(
+    //   tezos,
+    //   pool.value!.address,
+    //   amounts.map((a, i) => [
+    //     i,
+    //     BigNumber(a.value!).multipliedBy(10 ** poolTokens.value[i].decimals),
+    //   ]),
+    //   parseInt(wallet?.slippage!)
+    // );
+    // const params = request?.toTransferParams();
+
+    // const operatorCalls = await fa2UpdateOperators(
+    //   tezos,
+    //   wallet!.id,
+    //   pool.value!.pool_tokens[0].address,
+    //   pool.value!.pool_tokens.map((t) => t.pool_token_id),
+    //   "KT1MokJei8PpsdFCgvTPnC8zDWkpiryYNvsK"
+    // );
+
+    // const contractCall: WalletParamsWithKind = {
+    //   kind: OpKind.TRANSACTION,
+    //   ...params!,
+    // };
+    // const transactions = [];
+
+    // transactions.push(...operatorCalls.approveRequests);
+    // transactions.push(contractCall);
+    // transactions.push(...operatorCalls.revokeRequests);
+
+    // const batch = tezos.wallet.batch(transactions);
+    // const tx = await batch.send();
+    // const confirmation = await tx.confirmation();
+    // console.log(confirmation);
+    // confirmationRef.value = confirmation.block;
+    // amounts.forEach((a, i) => (amounts[i].value = undefined));
   } catch (e: any) {
     console.log(e);
   }

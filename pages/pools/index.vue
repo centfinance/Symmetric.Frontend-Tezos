@@ -27,6 +27,7 @@ const poolsListQuery = graphql(`
       swaps_count
       swap_enabled
       address
+      index
       factory
       id
       owner
