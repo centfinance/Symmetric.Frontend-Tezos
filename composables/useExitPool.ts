@@ -1,5 +1,6 @@
 import { TezosToolkit } from "@taquito/taquito";
 import { BigNumber } from "bignumber.js";
+import config from "~/config/config";
 import { tas } from "~/utils/types/type-aliases";
 import { VaultWalletType } from "~/utils/types/vault.types";
 import { Storage } from "~/utils/types/weighted-pool.types";
@@ -48,7 +49,7 @@ export const createExitRequest = async (
     const kind = "EXACT_SPT_IN_FOR_TOKENS_OUT";
 
     const vault = await tezos.wallet.at<VaultWalletType>(
-      "KT1MokJei8PpsdFCgvTPnC8zDWkpiryYNvsK"
+      config.contracts.vault
     );
 
     const request = vault.methodsObject.exitPool({

@@ -8,7 +8,8 @@ import {
 } from "@airgap/beacon-sdk";
 
 import type { BeaconWallet } from "@taquito/beacon-wallet";
-// import Config from "../config/config";
+
+import config from "~/config/config";
 
 // class TzktBlockExplorer extends BlockExplorer {
 //   constructor(
@@ -56,7 +57,7 @@ import type { BeaconWallet } from "@taquito/beacon-wallet";
 // export const walletNetwork = Config.WALLET_NETWORK;
 // export const configName = Config.NAME;
 // export const tzktNode = Config.TZKT_NODES[connectedNetwork];
-export const publicTzktNode = "https://api.ghostnet.tzkt.io/";
+export const publicTzktNode = config.tzktAPI;
 // export const voteEscrowAddress = Config.VOTE_ESCROW[connectedNetwork];
 // export const voterAddress = Config.VOTER[connectedNetwork];
 // export const veSwapAddress = Config.VE_SWAP[connectedNetwork];
@@ -66,7 +67,7 @@ export const publicTzktNode = "https://api.ghostnet.tzkt.io/";
 // export const routerAddress = Config.ROUTER[connectedNetwork];
 // export const tzktExplorer = Config.EXPLORER_LINKS.TEZOS[connectedNetwork];
 
-export const getRpcNode = () => "https://rpc.tzkt.io/ghostnet/";
+export const getRpcNode = () => config.rpcNode;
 
 export const dappClient = () => {
   let instance: BeaconWallet | undefined;

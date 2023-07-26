@@ -2,12 +2,12 @@
   <div>
     <div class="grid w-full grid-cols-12">
       <div class="col-span-12 w-full md:col-span-8 q-pa-md">
-        <div class="text-3xl font-bold">TVL</div>
-        <div class="text-6xl font-extrabold">$1,000,634</div>
+        <div class="text-2xl font-bold">TVL</div>
+        <div class="text-4xl font-extrabold">{{ totalLiquidity }}</div>
       </div>
       <div class="col-span-12 w-full md:col-span-4 q-pa-md">
-        <div class="text-3xl font-bold">Volume (24h)</div>
-        <div class="text-6xl font-extrabold">$15,043,564</div>
+        <div class="text-2xl font-bold">Volume (24h)</div>
+        <div class="text-4xl font-extrabold">$15,043,564</div>
       </div>
       <div class="col-span-12 w-full md:col-span-12 mt-4">
         <PoolsList :poolsList="poolsList" :pending="pending" :error="error" />
@@ -67,5 +67,6 @@ if (data.value && data.value.indexer_pool) {
   useRepo(PoolRepository).store(data.value);
 }
 
+const totalLiquidity = computed(() => useRepo(PoolRepository).tvl());
 const poolsList = computed(() => useRepo(PoolRepository).getPoolList());
 </script>

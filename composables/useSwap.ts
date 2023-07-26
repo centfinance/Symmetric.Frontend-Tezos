@@ -1,10 +1,13 @@
-import { TezosToolkit } from "@taquito/taquito";
+import { OpKind, TezosToolkit, WalletParamsWithKind } from "@taquito/taquito";
 import { formatFixed, parseFixed } from "@ethersproject/bignumber";
 import { BigNumber } from "bignumber.js";
+import config from "~/config/config";
 import { Pool } from "~/store/models/Pool";
 import { tas } from "~/utils/types/type-aliases";
 import { VaultContractType } from "~/utils/types/vault.types";
 import { Storage } from "~/utils/types/weighted-pool.types";
+import { Token } from "~/store/models/Token";
+import { Wallet } from "~/store/models/Wallet";
 
 function addMinutes(date: Date, minutes: number) {
   return new Date(date.getTime() + minutes * 60000);
@@ -36,7 +39,9 @@ export const calcSwapAmountOut = (
   const wi = parseFloat(tokenIn.weight.toString());
   const wo = parseFloat(tokenOut.weight.toString());
   const Ai = Number(amount);
-  const f = parseFloat(formatFixed(swapFee, 18));
+  const f = parseFloat(
+    formatFixed(BigNumber(swapFee).multipliedBy(ONE).toString(), 18)
+  );
   return bnum(Bo * (1 - (Bi / (Bi + Ai * (1 - f))) ** (wi / wo)));
   // return Bo.times(
   //     bnum(1).minus(
@@ -84,7 +89,7 @@ export const createSwapRequest = async (
     },
   };
 
-  const vault = await tezos.contract.at("KT1MokJei8PpsdFCgvTPnC8zDWkpiryYNvsK");
+  const vault = await tezos.contract.at(config.contracts.vault);
   console.log(vault);
   const swapRequest = vault.methods.swap(
     tas.timestamp(addMinutes(new Date(), 30).toISOString()),
@@ -103,4 +108,46 @@ export const createSwapRequest = async (
   );
 
   return swapRequest;
+};
+
+export const useSwap = async (
+  pool: Pool,
+  tokenIn: { address: string; id: number; decimals: number },
+  tokenOut: { address: string; id: number; decimals: number },
+  amountIn: string
+) => {
+  const tezos = await dappClient().tezos();
+  const wallet = useRepo(Wallet).all()[0];
+  const request = await createSwapRequest(
+    tezos,
+    pool.value!,
+    tokenIn,
+    tokenOut,
+    BigNumber(BigNumber(amountIn).toFixed(18)).multipliedBy(10 ** 18),
+    wallet!.id,
+    wallet!.slippage
+  );
+  const params = request.toTransferParams();
+
+  const operatorCalls = await fa2UpdateOperators(
+    tezos,
+    wallet!.id,
+    pool.value!.pool_tokens[0].address,
+    [tokenIn.value.token.id],
+    "KT1N5qYdthynXLfGbteRVHgKy4m6q2NGjt57"
+  );
+
+  const contractCall: WalletParamsWithKind = {
+    kind: OpKind.TRANSACTION,
+    ...params!,
+  };
+  const transactions = [];
+
+  transactions.push(...operatorCalls.approveRequests);
+  transactions.push(contractCall);
+  transactions.push(...operatorCalls.revokeRequests);
+
+  const batch = tezos.wallet.batch(transactions);
+  const tx = await batch.send();
+  return tx;
 };

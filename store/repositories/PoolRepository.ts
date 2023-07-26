@@ -1,7 +1,11 @@
 import { Repository } from "pinia-orm";
+import { graphql } from "~/gql";
+import config from "~/config/config";
 import { Pool } from "../models/Pool";
 import { PoolToken } from "../models/PoolToken";
 import { GetPoolQuery } from "~/gql/graphql";
+import { Wallet } from "../models/Wallet";
+import { TokenRepository } from "./TokenRepository";
 
 export class PoolRepository extends Repository {
   use = Pool;
@@ -21,7 +25,8 @@ export class PoolRepository extends Repository {
         name: pool.name,
         symbol: pool.symbol,
         pool_type: pool.pool_type,
-        swapFee: pool.swap_fee,
+        swap_fee: pool.swap_fee,
+        tokens_list: pool.tokens_list,
         total_swap_volume: pool.total_swap_volume,
         total_swap_fee: pool.total_swap_fee,
         total_liquidity: pool.total_liquidity,
@@ -52,8 +57,9 @@ export class PoolRepository extends Repository {
 
   getPoolList() {
     const pools = this.repo(Pool)
-      .has("pool_tokens", 1)
+      .has("pool_tokens", 2)
       .with("pool_tokens")
+      .where("factory", config.contracts.factory)
       .get();
 
     return pools.map((pool) => {
@@ -64,12 +70,85 @@ export class PoolRepository extends Repository {
             weight: `${token.weight / (10 * 10 ** 15)}%`,
           };
         }),
-        total_liquidity: pool.total_liquidity,
+        total_liquidity: pool.totalLiquidity(),
         total_swap_volume: pool.total_swap_volume,
         address: pool.address,
         icons: pool.pool_tokens.map((t) => t.icon),
       };
     });
+  }
+
+  tvl() {
+    let USDollar = new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+    });
+
+    const pools = this.repo(Pool)
+      .has("pool_tokens", 2)
+      .with("pool_tokens")
+      .get();
+
+    const tvl = pools.reduce(
+      (accumulator, pool) => accumulator + pool.totalLiquidity(),
+      0
+    );
+
+    return USDollar.format(tvl);
+  }
+
+  async fetchPoolData() {
+    const poolsListQuery = graphql(`
+      query GetPool {
+        indexer_pool(order_by: { total_liquidity: desc }) {
+          holders_count
+          swaps_count
+          swap_enabled
+          address
+          index
+          factory
+          id
+          owner
+          create_time
+          swap_fee
+          total_liquidity
+          total_shares
+          total_swap_fee
+          total_swap_volume
+          name
+          pool_type
+          symbol
+          tokens_list
+          pool_tokens {
+            address
+            balance
+            index
+            decimals
+            name
+            symbol
+            token_id
+            weight
+            id
+            pool_id
+            pool_token_id
+            token {
+              fa2
+            }
+          }
+        }
+      }
+    `);
+
+    const { pending, data, error } = await useAsyncQuery(poolsListQuery);
+
+    if (data.value && data.value.indexer_pool) {
+      this.store(data.value);
+    }
+
+    const wallet = this.repo(Wallet).where("active", true).first();
+    if (wallet) {
+      await this.repo(TokenRepository).fetchUserBalances(wallet.id);
+    }
   }
 
   async updateUserBalances(pool: Pool, user: string) {

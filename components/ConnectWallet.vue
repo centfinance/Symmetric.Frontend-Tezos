@@ -1,38 +1,49 @@
 <template>
   <div v-if="connected">
     <q-btn-dropdown
+      dark
       outline
       no-caps
       color="orange"
       :label="address"
-      dropdown-icon="settings"
+      dropdown-icon="menu"
     >
-      <q-list dark class="bg-black">
-        <q-item dark dense clickable v-close-popup @click="">
+      <q-list dark bordered separator class="bg-black">
+        <q-item dark dense clickable v-close-popup @click="copyAddress">
+          <q-item-section avatar>
+            <q-icon name="content_copy" size="xs" />
+          </q-item-section>
           <q-item-section>
             <q-item-label>Copy Address</q-item-label>
           </q-item-section>
         </q-item>
 
         <q-item dark dense clickable v-close-popup @click="switchAccount">
+          <q-item-section avatar>
+            <q-icon name="switch_account" size="xs" />
+          </q-item-section>
           <q-item-section>
             <q-item-label>Switch Account</q-item-label>
           </q-item-section>
         </q-item>
 
         <q-item dark dense clickable v-close-popup @click="disconnect">
+          <q-item-section avatar>
+            <q-icon name="logout" size="xs" />
+          </q-item-section>
           <q-item-section>
             <q-item-label>Disconnect Wallet</q-item-label>
           </q-item-section>
         </q-item>
       </q-list>
     </q-btn-dropdown>
+    <q-tooltip no-parent-event v-model="copied">Copied</q-tooltip>
   </div>
   <div v-else>
-    <UButton
-      size="xl"
-      color="primary"
-      variant="solid"
+    <q-btn
+      size="lg"
+      color="orange"
+      no-caps
       label="Connect Wallet"
       @click="connect"
     />
@@ -53,7 +64,9 @@ const address = computed(
 );
 
 const connected = computed(() => (active.value ? true : false));
+const wallet = computed(() => useRepo(Wallet).all()[0]);
 
+const copied = ref(false);
 const connect = async () => {
   const resp = await dappClient().connectAccount();
   useRepo(Wallet).save({
@@ -65,12 +78,30 @@ const connect = async () => {
   active.value = await (await dappClient().getDAppClient()).getActiveAccount();
 };
 
+const copyAddress = async () => {
+  try {
+    await navigator.clipboard.writeText(wallet.value.id);
+    copied.value = true;
+    setTimeout(() => {
+      copied.value = false;
+    }, 2000);
+  } catch ($e) {
+    alert("Cannot copy");
+  }
+};
+
 const switchAccount = async () => {
   await dappClient().swapAccount();
 };
 
 const disconnect = async () => {
   await dappClient().disconnectWallet();
+  useRepo(Wallet).flush();
   active.value = undefined;
 };
 </script>
+<style scoped>
+.q-btn {
+  font-size: 1rem !important;
+}
+</style>

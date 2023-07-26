@@ -1,5 +1,5 @@
 import { Model } from "pinia-orm";
-
+import config from "~/config/config";
 import { PoolToken } from "./PoolToken";
 import numbro from "numbro";
 import { BigNumber } from "bignumber.js";
@@ -22,6 +22,7 @@ export class Pool extends Model {
       pool_type: this.string(""),
       pool_shares: this.string("0"),
       swap_fee: this.number(0),
+      tokens_list: this.string(""),
       total_swap_volume: this.number(0),
       total_swap_fee: this.number(0),
       total_liquidity: this.number(0),
@@ -91,5 +92,14 @@ export class Pool extends Model {
       average: true,
       totalLength: 6,
     });
+  }
+
+  totalLiquidity() {
+    return this.pool_tokens.reduce(
+      (accumulator, token) =>
+        accumulator +
+        token.balance * (config.mockPriceData[token.symbol] as number),
+      0
+    );
   }
 }

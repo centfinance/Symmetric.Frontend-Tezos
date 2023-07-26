@@ -9,6 +9,7 @@ export class Wallet extends Model {
       walletKey: this.string(null),
       lastConnected: this.number(0),
       slippage: this.attr("0.5"),
+      active: this.boolean(true),
     };
   }
 
@@ -16,4 +17,5 @@ export class Wallet extends Model {
   declare walletKey?: string;
   declare lastConnected: number;
   declare slippage: string;
+  declare active: boolean;
 }

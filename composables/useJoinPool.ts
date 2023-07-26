@@ -1,5 +1,6 @@
 import { OpKind, TezosToolkit, WalletParamsWithKind } from "@taquito/taquito";
 import { BigNumber } from "bignumber.js";
+import config from "~/config/config";
 import { tas } from "~/utils/types/type-aliases";
 import { VaultContractType, VaultWalletType } from "~/utils/types/vault.types";
 import { Storage } from "~/utils/types/weighted-pool.types";
@@ -64,7 +65,7 @@ export const createJoinRequest = async (
     const minSPTAmountOut = tas.nat(0);
 
     const vault = await tezos.wallet.at<VaultWalletType>(
-      "KT1MokJei8PpsdFCgvTPnC8zDWkpiryYNvsK"
+      config.contracts.vault
     );
 
     const request = vault.methodsObject.joinPool({
@@ -133,7 +134,7 @@ export const useJoinPool = async (
     wallet,
     tokens[0].address,
     tokens.map((t) => (t.id ? t.id : 0)),
-    "KT1MokJei8PpsdFCgvTPnC8zDWkpiryYNvsK"
+    config.contracts.vault
   );
 
   const contractCall: WalletParamsWithKind = {

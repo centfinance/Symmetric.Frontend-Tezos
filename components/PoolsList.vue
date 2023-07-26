@@ -14,7 +14,31 @@
           :columns="columns"
           row-key="name"
           separator="none"
+          column-sort-order="da"
         >
+          <template v-slot:top="props">
+            <div class="flex flex-row w-full justify-between pt-2">
+              <div class="font-bold text-2xl">Pools</div>
+              <div class="flex gap-2">
+                <q-btn
+                  dark
+                  dense
+                  outline
+                  rounded
+                  icon="refresh"
+                  @click="refresh"
+                />
+                <q-btn
+                  dark
+                  dense
+                  outline
+                  rounded
+                  icon="add"
+                  to="/pools/create"
+                />
+              </div>
+            </div>
+          </template>
           <template v-slot:body="props">
             <q-tr :props="props">
               <q-td :props="props">
@@ -42,7 +66,7 @@
                 </div>
               </q-td>
               <q-td key="total_liquidity" :props="props">
-                {{ props.row.total_liquidity }}
+                {{ USDollar.format(props.row.total_liquidity) }}
               </q-td>
               <q-td key="total_swap_volume" :props="props">
                 {{ props.row.total_swap_volume }}
@@ -50,7 +74,7 @@
               <q-td>
                 <q-btn
                   label="Manage"
-                  :disable="!connected"
+                  :disable="!wallet"
                   no-caps
                   color="black"
                   @click="openPoolDialog(props.row.address)"
@@ -69,6 +93,9 @@
   </div>
 </template>
 <script lang="ts" setup>
+import { Wallet } from "~/store/models/Wallet";
+import { PoolRepository } from "~/store/repositories/PoolRepository";
+
 type PoolsList = {
   composition: { symbol: string; weight: string }[];
   total_liquidity: number;
@@ -83,7 +110,6 @@ const props = defineProps<{
   error?: Error | null;
 }>();
 
-console.log(props.poolsList);
 const columns = [
   {
     name: "composition",
@@ -106,9 +132,12 @@ const columns = [
   },
 ];
 
-const client = await dappClient().getDAppClient();
-const active = ref(await client.getActiveAccount());
-const connected = computed(() => (active.value ? true : false));
+let USDollar = new Intl.NumberFormat("en-US", {
+  style: "currency",
+  currency: "USD",
+});
+
+const wallet = computed(() => useRepo(Wallet).all()[0]);
 
 const selectedPool = ref<string | null>(null);
 
@@ -118,5 +147,9 @@ const openPoolDialog = (pool: string) => {
 
 const closePoolDialog = () => {
   selectedPool.value = null;
+};
+
+const refresh = async () => {
+  await useRepo(PoolRepository).fetchPoolData();
 };
 </script>

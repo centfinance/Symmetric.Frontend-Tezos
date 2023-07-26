@@ -2,6 +2,7 @@ import { OpKind, TezosToolkit, WalletParamsWithKind } from "@taquito/taquito";
 import { char2Bytes } from "@taquito/utils";
 import { BigNumber } from "bignumber.js";
 import { error } from "console";
+import config from "~/config/config";
 import { tas } from "~/utils/types/type-aliases";
 import { WeightedPoolFactoryWalletType } from "~/utils/types/weighted-pool-factory.types";
 
@@ -16,7 +17,7 @@ export const createPoolRequest = async (
   swapFee: BigNumber
 ) => {
   const factory = await tezos.wallet.at<WeightedPoolFactoryWalletType>(
-    "KT1EkhhxLLiufUCytCUSrAuSA8fiPu4EX59t"
+    config.contracts.factory
   );
   const request = factory.methodsObject.create({
     metadata: tas.bytes(char2Bytes("")),
@@ -62,7 +63,7 @@ export const createPoolRequest = async (
 
 export const createInitPoolRequest = async (tezos: TezosToolkit) => {
   const factory = await tezos.wallet.at<WeightedPoolFactoryWalletType>(
-    "KT1EkhhxLLiufUCytCUSrAuSA8fiPu4EX59t"
+    config.contracts.factory
   );
   const request = factory.methodsObject.initialize();
   return request;

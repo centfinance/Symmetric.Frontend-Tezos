@@ -123,6 +123,7 @@ import { BigNumber } from "bignumber.js";
 import { Pool } from "~/store/models/Pool";
 import numbro from "numbro";
 import { Wallet } from "~/store/models/Wallet";
+import { PoolRepository } from "~/store/repositories/PoolRepository";
 
 const props = defineProps<{
   pool?: string | null;
@@ -215,8 +216,7 @@ const onConfirm = async () => {
     console.log(confirmation);
     confirmationRef.value = confirmation.block;
     inputValue.value = undefined;
-    // reset inputs
-    // display confirmation
+    useRepo(PoolRepository).fetchPoolData();
   } catch (e: any) {
     console.log(e);
   }

@@ -226,6 +226,7 @@
 
 <script lang="ts" setup>
 import { BigNumber } from "bignumber.js";
+import config from "~/config/config";
 import { useCreatePool } from "~/composables/useCreatePool";
 import { encodePubKey } from "@taquito/utils";
 
@@ -371,7 +372,7 @@ const onSetSwapFee = async () => {
         const tezos = await dappClient().tezos();
         const sub = tezos.stream.subscribeEvent({
           tag: "PoolRegistered",
-          address: "KT1MokJei8PpsdFCgvTPnC8zDWkpiryYNvsK",
+          address: config.contracts.vault,
         });
 
         // rome-ignore lint/suspicious/noExplicitAny: <explanation>

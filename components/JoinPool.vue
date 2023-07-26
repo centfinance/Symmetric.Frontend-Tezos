@@ -14,10 +14,10 @@
           bottom-slots
           v-model="amounts[token.index].value"
           input-class="focus:ring-0 focus:ring-offset-0"
-          @update:model-value="calculateAmounts(token.index)"
+          @update:model-value="calculatePrice(token.symbol, token.index)"
           :rules="[
-            (val) => val > 0 || 'No amount entered',
-            (val) =>
+            (val: any) => val > 0 || 'No amount entered',
+            (val: any) =>
               val <= poolTokens[token.index].normalizedBalance() ||
               'Not enough Balance',
           ]"
@@ -40,7 +40,11 @@
 
           <template v-slot:append>
             <div class="text-sm">
-              {{ price && pool?.total_liquidity > 0 ? price : "" }}
+              {{
+                prices[token.index].value
+                  ? USDollar.format(prices[token.index].value!)
+                  : ""
+              }}
             </div>
           </template>
 
@@ -56,7 +60,8 @@
                 () => {
                   amounts[token.index].value =
                     poolTokens[token.index].normalizedBalance();
-                  calculateAmounts(token.index);
+                  // calculateAmounts(token.index);
+                  calculatePrice(token.symbol, token.index);
                 }
               "
             >
@@ -110,11 +115,12 @@
 </template>
 
 <script lang="ts" setup>
-import { OpKind, WalletParamsWithKind } from "@taquito/taquito";
 import { BigNumber } from "bignumber.js";
+import config from "~/config/config";
 import { Pool } from "~/store/models/Pool";
 import { PoolToken } from "~/store/models/PoolToken";
 import { Wallet } from "~/store/models/Wallet";
+import { PoolRepository } from "~/store/repositories/PoolRepository";
 
 const props = defineProps<{
   pool?: string | null;
@@ -181,6 +187,23 @@ const calculateAmounts = (i: number) => {
     }
   }
 };
+const prices = tokens.value?.map((t) => ref<number | undefined>(undefined));
+
+let USDollar = new Intl.NumberFormat("en-US", {
+  style: "currency",
+  currency: "USD",
+});
+
+const calculatePrice = (symbol: string, i: number) => {
+  if (symbol in config.mockPriceData) {
+    if (amounts[i].value && !isNaN(parseInt(amounts[i].value!))) {
+      const price = BigNumber(amounts[i].value!).multipliedBy(
+        config.mockPriceData[symbol]
+      );
+      prices[i].value = price.toNumber();
+    }
+  }
+};
 
 const price = computed(() => {
   if (props.pricingAsset) {
@@ -225,42 +248,7 @@ const addLiquidity = async () => {
     console.log(confirmation);
     confirmationRef.value = confirmation.block;
     amounts.forEach((a, i) => (amounts[i].value = undefined));
-
-    // const request = await createJoinRequest(
-    //   tezos,
-    //   pool.value!.address,
-    //   amounts.map((a, i) => [
-    //     i,
-    //     BigNumber(a.value!).multipliedBy(10 ** poolTokens.value[i].decimals),
-    //   ]),
-    //   parseInt(wallet?.slippage!)
-    // );
-    // const params = request?.toTransferParams();
-
-    // const operatorCalls = await fa2UpdateOperators(
-    //   tezos,
-    //   wallet!.id,
-    //   pool.value!.pool_tokens[0].address,
-    //   pool.value!.pool_tokens.map((t) => t.pool_token_id),
-    //   "KT1MokJei8PpsdFCgvTPnC8zDWkpiryYNvsK"
-    // );
-
-    // const contractCall: WalletParamsWithKind = {
-    //   kind: OpKind.TRANSACTION,
-    //   ...params!,
-    // };
-    // const transactions = [];
-
-    // transactions.push(...operatorCalls.approveRequests);
-    // transactions.push(contractCall);
-    // transactions.push(...operatorCalls.revokeRequests);
-
-    // const batch = tezos.wallet.batch(transactions);
-    // const tx = await batch.send();
-    // const confirmation = await tx.confirmation();
-    // console.log(confirmation);
-    // confirmationRef.value = confirmation.block;
-    // amounts.forEach((a, i) => (amounts[i].value = undefined));
+    useRepo(PoolRepository).fetchPoolData();
   } catch (e: any) {
     console.log(e);
   }
