@@ -1,11 +1,11 @@
 <template>
   <div>
-    <div class="w-2/3 rounded-md mx-auto grid grid-cols-1 p-4 bg-black">
+    <div class="w-max rounded-md mx-auto grid grid-cols-1 p-4 bg-black">
       <div class="pb-3 flex justify-end">
         <SetSlippage v-if="wallet" />
       </div>
       <div class="bg-grey-10 rounded p-4 flex justify-between">
-        <div>
+        <div class="mr-4 w-52">
           Amount Input
           <q-input
             dark
@@ -18,18 +18,19 @@
         <div>
           <TokenSelect
             v-model="tokenIn"
-            label="Token In"
             default="CTez"
             :options="optionsInRef"
           />
-          <div v-if="wallet">Balance: {{ tokenIn?.balance }}</div>
+          <div class="flex justify-end mt-1 pt-2 mr-2" v-if="wallet">
+            Balance: {{ tokenIn?.balance }}
+          </div>
         </div>
       </div>
       <div class="mx-auto">
         <q-btn dark round icon="arrow_downward" @click="switchTokens" />
       </div>
-      <div class="bg-grey-10 rounded p-4 flex justify-between">
-        <div>
+      <div class="flex-row bg-grey-10 rounded p-4 flex justify-between">
+        <div class="mr-4 w-52">
           Amount Output
           <q-input
             dark
@@ -42,12 +43,13 @@
           />
         </div>
         <div>
-          <TokenSelect
-            v-model="tokenOut"
-            label="Select Token"
-            :options="optionsOutRef"
-          />
-          <div v-if="tokenOut && wallet">Balance: {{ tokenOut?.balance }}</div>
+          <TokenSelect v-model="tokenOut" :options="optionsOutRef" />
+          <div
+            class="flex justify-end mt-1 pt-2 mr-2"
+            v-if="tokenOut && wallet"
+          >
+            Balance: {{ tokenOut?.balance }}
+          </div>
         </div>
       </div>
       <div v-if="loading || confirmationRef" class="p-4 mt-8 bg-gray-900">
@@ -115,6 +117,17 @@ const tokens = computed(() =>
     .get()
 );
 
+const client = await dappClient().getDAppClient();
+const account = await client.getActiveAccount();
+if (account) {
+  useRepo(Wallet).save({
+    id: account!.address,
+    walletKey: account!.walletKey,
+    lastConnected: account!.connectedAt,
+    slippage: "0.5",
+  });
+}
+
 const wallet = computed(() => useRepo(Wallet).all()[0]);
 
 const options = computed(() =>
@@ -135,7 +148,7 @@ const options = computed(() =>
 );
 
 const tokenIn = ref<any>(options.value[0]);
-const tokenOut = ref<any>(null);
+const tokenOut = ref<any>(options.value[1]);
 
 const optionsInRef = ref(options);
 const optionsOutRef = computed(() =>
@@ -145,8 +158,6 @@ const optionsOutRef = computed(() =>
 );
 
 const amountIn = ref(null);
-
-const estimate = ref<any>(null);
 
 const pool = computed(() => {
   return useRepo(Pool).with("pool_tokens").find(amountOut.value?.poolId);

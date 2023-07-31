@@ -5,12 +5,10 @@
       rounded
       outlined
       dark
-      dense
+      color="orange"
       use-input
-      input-class="focus:ring-0 focus:ring-offset-0 text-2xl"
-      style="width: 200px"
+      input-class="hidden focus:ring-0 focus:ring-offset-0 text-2xl"
       input-debounce="0"
-      :label="props.label"
       :options="optionsRef"
       @filter="filterFn"
       behavior="dialog"
@@ -84,3 +82,9 @@ const filterFn = (val: any, update: any) => {
   });
 };
 </script>
+<style>
+div.q-field__control-container.col.relative-position.row.no-wrap.q-anchor--skip
+  > div.q-field__label.no-pointer-events.absolute.ellipsis {
+  max-width: fit-content !important;
+}
+</style>

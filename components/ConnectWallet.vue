@@ -2,9 +2,10 @@
   <div v-if="connected">
     <q-btn-dropdown
       dark
-      outline
+      unelevated
       no-caps
-      color="orange"
+      color="grey-10"
+      class="text-orange"
       :label="address"
       dropdown-icon="menu"
     >

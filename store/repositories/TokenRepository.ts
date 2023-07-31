@@ -46,6 +46,7 @@ export class TokenRepository extends Repository {
           total_balance_usd: t.total_balance_usd,
           total_volume_notional: t.total_volume_notional,
           total_volume_usd: t.total_volume_usd,
+          icon: `/icons/${t.symbol?.toUpperCase()}.png`,
         };
       });
       this.save(tokens);

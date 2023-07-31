@@ -1,5 +1,5 @@
 <template>
-  <nav class="flex items-center justify-between p-6">
+  <nav class="grid grid-cols-3 justify-between items-center p-6">
     <!-- Left side -->
     <div class="flex space-x-8">
       <NuxtLink to="/swap" class="text-white font-bold text-xl">Swap</NuxtLink>
@@ -9,12 +9,20 @@
     </div>
 
     <!-- Middle -->
-    <div>
+    <div class="place-self-center">
       <img src="/symm-logo.svg" alt="logo" class="h-16 w-auto" />
     </div>
 
     <!-- Right side -->
-    <ConnectWallet />
+    <div class="flex flex-row place-content-end gap-4">
+      <NuxtLink
+        to="https://faucet-api.symmetric.workers.dev"
+        class="text-white text-lg p-2"
+        target="_blank"
+        >Faucet</NuxtLink
+      >
+      <ConnectWallet />
+    </div>
   </nav>
 </template>
 

@@ -18,7 +18,19 @@
 
 <script lang="ts" setup>
 import { graphql } from "~/gql";
+import { Wallet } from "~/store/models/Wallet";
 import { PoolRepository } from "~/store/repositories/PoolRepository";
+
+const client = await dappClient().getDAppClient();
+const account = await client.getActiveAccount();
+if (account) {
+  useRepo(Wallet).save({
+    id: account!.address,
+    walletKey: account!.walletKey,
+    lastConnected: account!.connectedAt,
+    slippage: "0.5",
+  });
+}
 
 const poolsListQuery = graphql(`
   query GetPool {

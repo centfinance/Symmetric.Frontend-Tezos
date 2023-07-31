@@ -64,7 +64,6 @@ export const getBalanceFromTzkt = async (
       if (id) {
         return {
           id: id as string,
-          icon: (b.token.metadata.thumbnailUri as string) || null,
           userBalance: b.balance as string,
         };
       }
