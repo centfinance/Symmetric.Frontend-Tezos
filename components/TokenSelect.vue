@@ -44,7 +44,6 @@
 </template>
 <script lang="ts" setup>
 const props = defineProps<{
-  label: string;
   options: any[];
   modelValue: any;
 }>();

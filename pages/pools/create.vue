@@ -399,11 +399,7 @@ const addLiquidityConfirm = ref<any>(null);
 const onAddLiquidity = async () => {
   loading.value = true;
   try {
-    console.log(amounts);
-    console.log(inputRefs.value);
     const valid = inputRefs.value.every((input, i) => {
-      console.log(i);
-      console.log(input);
       return input.value[0].validate();
     });
     if (valid) {
@@ -415,7 +411,12 @@ const onAddLiquidity = async () => {
           index: i,
         };
       });
-
+      if (!pool || !pool.value) {
+        const latestPool = await getLatestPoolId();
+        if (latestPool.address && latestPool.id) {
+          pool.value = latestPool as { address: string; id: any };
+        }
+      }
       const tx = await useJoinPool(
         pool.value!,
         amounts.map((a: any, i: number) => {
@@ -425,9 +426,9 @@ const onAddLiquidity = async () => {
         0.005,
         true
       );
-
-      const confirmation = await tx.confirmation();
-      addLiquidityConfirm.value = confirmation.block;
+      const hash = tx.opHash;
+      await tx.confirmation();
+      addLiquidityConfirm.value = hash;
       amounts.forEach((a, i) => (amounts[i].value = undefined));
     }
   } catch (e: any) {

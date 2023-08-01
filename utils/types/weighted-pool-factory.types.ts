@@ -13,7 +13,6 @@ export type Storage = {
   isPoolFromFactory: BigMap<address, unit>;
   lastPool: address;
   metadata: BigMap<string, bytes>;
-  proposed_admin?: address;
   protocolFeeProvider: address;
   vault: address;
   weightedMathLib: address;
@@ -21,7 +20,6 @@ export type Storage = {
 };
 
 type Methods = {
-  accept_admin: () => Promise<void>;
   create: (
     metadata: bytes,
     normalizedWeights: MMap<nat, nat>,
@@ -38,11 +36,9 @@ type Methods = {
     >
   ) => Promise<void>;
   initialize: () => Promise<void>;
-  transfer_admin: (param: address) => Promise<void>;
 };
 
 type MethodsObject = {
-  accept_admin: () => Promise<void>;
   create: (params: {
     metadata: bytes;
     normalizedWeights: MMap<nat, nat>;
@@ -59,16 +55,19 @@ type MethodsObject = {
     >;
   }) => Promise<void>;
   initialize: () => Promise<void>;
-  transfer_admin: (param: address) => Promise<void>;
 };
 
 type contractTypes = {
   methods: Methods;
   methodsObject: MethodsObject;
   storage: Storage;
-  code: { __type: "WeightedPoolFactoryCode"; protocol: string; code: object[] };
+  code: {
+    __type: "WeightedPoolFactoryNoAdminCode";
+    protocol: string;
+    code: object[];
+  };
 };
-export type WeightedPoolFactoryContractType =
+export type WeightedPoolFactoryNoAdminContractType =
   ContractAbstractionFromContractType<contractTypes>;
-export type WeightedPoolFactoryWalletType =
+export type WeightedPoolFactoryNoAdminWalletType =
   WalletContractAbstractionFromContractType<contractTypes>;

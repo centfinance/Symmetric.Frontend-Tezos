@@ -84,11 +84,9 @@
             <div>Liquidity Added 🎉</div>
             <div class="text-sm text-blue-500">
               <a
-                :href="`https://ghostnet.tzkt.io/${
-                  confirmationRef.operations.at(-1).at(-1).hash
-                }`"
+                :href="`https://ghostnet.tzkt.io/${confirmationRef}`"
                 target="_blank"
-                >{{ confirmationRef.operations.at(-1).at(-1).hash }}</a
+                >{{ confirmationRef }}</a
               >
             </div>
           </div>
@@ -154,8 +152,6 @@ let tokens = computed(() =>
     };
   })
 );
-
-console.log(tokens);
 
 const balances = computed(() =>
   pool.value?.pool_tokens.map((t) => {
@@ -243,10 +239,10 @@ const addLiquidity = async () => {
       parseInt(wallet?.slippage!) / 100,
       pool.value!.pool_shares == 0 ? true : false
     );
-
+    const hash = tx.opHash;
     const confirmation = await tx.confirmation();
     console.log(confirmation);
-    confirmationRef.value = confirmation.block;
+    confirmationRef.value = hash;
     amounts.forEach((a, i) => (amounts[i].value = undefined));
     useRepo(PoolRepository).fetchPoolData();
   } catch (e: any) {

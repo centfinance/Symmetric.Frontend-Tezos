@@ -2,7 +2,7 @@
   <div class="q-pa-sm">
     <div class="flex flex-row justify-between gap-x-1 mx-4 my-1">
       <div class="place-self-end font-bold">How much to withdraw?</div>
-      <div>
+      <div class="flex flex-row gap-x-1">
         <q-btn outline dense label="25%" @click="onPercentageChange(25)" />
         <q-btn outline dense label="50%" @click="onPercentageChange(50)" />
         <q-btn outline dense label="75%" @click="onPercentageChange(75)" />
@@ -90,11 +90,9 @@
       <div>Liquidity Removed 🎉</div>
       <div class="text-sm text-blue-500">
         <a
-          :href="`https://ghostnet.tzkt.io/${
-            confirmationRef.operations.at(-1).at(-1).hash
-          }`"
+          :href="`https://ghostnet.tzkt.io/${confirmationRef}`"
           target="_blank"
-          >{{ confirmationRef.operations.at(-1).at(-1).hash }}</a
+          >{{ confirmationRef }}</a
         >
       </div>
     </div>
@@ -212,9 +210,10 @@ const onConfirm = async () => {
     );
 
     const tx = await request!.send();
+    const hash = tx.opHash;
     const confirmation = await tx.confirmation();
     console.log(confirmation);
-    confirmationRef.value = confirmation.block;
+    confirmationRef.value = hash;
     inputValue.value = undefined;
     useRepo(PoolRepository).fetchPoolData();
   } catch (e: any) {

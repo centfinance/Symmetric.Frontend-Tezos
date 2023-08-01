@@ -1,12 +1,3 @@
-import {
-  AccountInfo,
-  BlockExplorer,
-  ColorMode,
-  DAppClientOptions,
-  Network,
-  NetworkType,
-} from "@airgap/beacon-sdk";
-
 import type { BeaconWallet } from "@taquito/beacon-wallet";
 
 import config from "~/config/config";
@@ -77,8 +68,8 @@ export const dappClient = () => {
     const dAppInfo = {
       name: "Symmetric Finance",
       iconUrl: "",
-      preferredNetwork: NetworkType.GHOSTNET,
-      colorMode: ColorMode.DARK,
+      preferredNetwork: "ghostnet",
+      colorMode: "dark",
       // blockExplorer: new TzktBlockExplorer() as any,
       appUrl: "https://tezos.symm.fi",
       featuredWallets: ["temple", "naan", "kukai", "trust"],
@@ -106,7 +97,7 @@ export const dappClient = () => {
     await client.clearActiveAccount();
     return client.requestPermissions({
       network: {
-        type: NetworkType.GHOSTNET,
+        type: "ghostnet",
       },
     });
   }
@@ -115,7 +106,7 @@ export const dappClient = () => {
     const client = await getDAppClient();
     client.requestPermissions({
       network: {
-        type: NetworkType.GHOSTNET,
+        type: "ghostnet",
       },
     });
     const account = await client.getActiveAccount();
@@ -130,7 +121,7 @@ export const dappClient = () => {
       if (!activeAccount) {
         await client.requestPermissions({
           network: {
-            type: NetworkType.GHOSTNET,
+            type: "ghostnet",
             rpcUrl: getRpcNode(),
           },
         });

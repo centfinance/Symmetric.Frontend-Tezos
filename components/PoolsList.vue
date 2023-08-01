@@ -15,6 +15,7 @@
           row-key="name"
           separator="none"
           column-sort-order="da"
+          table-header-class="font-bold"
         >
           <template v-slot:top="props">
             <div class="flex flex-row w-full justify-between pt-2">
@@ -39,30 +40,39 @@
               </div>
             </div>
           </template>
+          <template v-slot:header="props">
+            <q-tr :props="props">
+              <q-th v-for="col in props.cols" :key="col.name" :props="props">
+                {{ col.label }}
+              </q-th>
+            </q-tr>
+          </template>
           <template v-slot:body="props">
             <q-tr :props="props">
-              <q-td :props="props">
-                <q-avatar
-                  v-for="(t, i) in props.row.icons"
-                  :key="i"
-                  size="40px"
-                  class="overlapping"
-                  :style="`left: ${i * 25}px`"
-                >
-                  <q-img :src="props.row.icons[i]" />
-                </q-avatar>
-              </q-td>
               <q-td key="composition" :props="props">
-                <div class="flex flex-wrap gap-y-1">
-                  <q-badge
-                    v-for="token in props.row.composition"
-                    key="token"
-                    color="black"
-                    class="mx-1"
-                  >
-                    {{ token.symbol }}
-                    {{ token.weight }}
-                  </q-badge>
+                <div class="grid grid-cols-12 grid-flow-col auto-cols-min">
+                  <div class="col-span-4">
+                    <q-avatar
+                      v-for="(t, i) in props.row.icons"
+                      :key="i"
+                      size="35px"
+                      class="bg-black"
+                      :style="`left: ${i * -15}px`"
+                    >
+                      <q-img :src="props.row.icons[i]" />
+                    </q-avatar>
+                  </div>
+                  <div class="col-span-8 flex flex-wrap gap-y-1">
+                    <q-badge
+                      v-for="token in props.row.composition"
+                      key="token"
+                      color="black"
+                      class="mx-1"
+                    >
+                      {{ token.symbol }}
+                      {{ token.weight }}
+                    </q-badge>
+                  </div>
                 </div>
               </q-td>
               <q-td key="total_liquidity" :props="props">

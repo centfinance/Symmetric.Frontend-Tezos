@@ -60,11 +60,9 @@
           <div>Swap Completed 🎉</div>
           <div class="text-sm text-blue-500">
             <a
-              :href="`https://ghostnet.tzkt.io/${
-                confirmationRef.operations.at(-1).at(-1).hash
-              }`"
+              :href="`https://ghostnet.tzkt.io/${confirmationRef}`"
               target="_blank"
-              >{{ confirmationRef.operations.at(-1).at(-1).hash }}</a
+              >{{ confirmationRef }}</a
             >
           </div>
         </div>
@@ -298,6 +296,7 @@ const switchTokens = () => {
 //   estimate.value = null;
 // });
 const confirmationRef = ref<any>(null);
+
 const swap = async () => {
   loading.value = true;
   try {
@@ -308,13 +307,16 @@ const swap = async () => {
         tokenOut.value.token,
         amountIn.value!
       );
+      const hash = tx.opHash;
       const confirmation = await tx.confirmation();
       console.log(confirmation);
-      confirmationRef.value = confirmation.block;
+      confirmationRef.value = hash;
       amountIn.value = null;
       useRepo(PoolRepository).fetchPoolData();
     }
-  } catch (e: any) {}
+  } catch (e: any) {
+    console.error(e);
+  }
   loading.value = false;
 };
 </script>

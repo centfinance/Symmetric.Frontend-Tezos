@@ -1,10 +1,28 @@
 import { OpKind, TezosToolkit, WalletParamsWithKind } from "@taquito/taquito";
 import { char2Bytes } from "@taquito/utils";
 import { BigNumber } from "bignumber.js";
-import { error } from "console";
+import { WeightedPoolContractType } from "utils/types/weighted-pool.types";
 import config from "~/config/config";
 import { tas } from "~/utils/types/type-aliases";
-import { WeightedPoolFactoryWalletType } from "~/utils/types/weighted-pool-factory.types";
+import {
+  Storage as FactoryStorage,
+  WeightedPoolFactoryNoAdminWalletType,
+} from "~/utils/types/weighted-pool-factory.types";
+
+export const getLatestPoolId = async () => {
+  const tezos = await dappClient().tezos();
+  const contract = await tezos.contract.at(config.contracts.factory);
+  const storage = (await contract.storage()) as FactoryStorage;
+  const poolAddress = storage.lastPool;
+  const poolContract = await tezos.contract.at<WeightedPoolContractType>(
+    poolAddress
+  );
+  const poolStorage = await poolContract.storage();
+  return {
+    address: poolStorage.poolId?.Some[0].toString(),
+    id: poolStorage.poolId?.Some[1].toNumber(),
+  };
+};
 
 export const createPoolRequest = async (
   tezos: TezosToolkit,
@@ -16,7 +34,7 @@ export const createPoolRequest = async (
   }[],
   swapFee: BigNumber
 ) => {
-  const factory = await tezos.wallet.at<WeightedPoolFactoryWalletType>(
+  const factory = await tezos.wallet.at<WeightedPoolFactoryNoAdminWalletType>(
     config.contracts.factory
   );
   const request = factory.methodsObject.create({
@@ -62,7 +80,7 @@ export const createPoolRequest = async (
 };
 
 export const createInitPoolRequest = async (tezos: TezosToolkit) => {
-  const factory = await tezos.wallet.at<WeightedPoolFactoryWalletType>(
+  const factory = await tezos.wallet.at<WeightedPoolFactoryNoAdminWalletType>(
     config.contracts.factory
   );
   const request = factory.methodsObject.initialize();
@@ -108,6 +126,6 @@ export const useCreatePool = async (
     const batch = tezos.wallet.batch(requests);
     return await batch.send();
   } catch (e: any) {
-    console.error(error);
+    console.error(e);
   }
 };

@@ -1,5 +1,4 @@
 import { checkAddress } from "./tz.js";
-import { TezosOperationType } from "@airgap/beacon-sdk";
 import { OpKind, WalletParamsWithKind } from "@taquito/taquito";
 
 const approveEntrypoint = "approve";
@@ -94,7 +93,7 @@ function processFa1(
 
   return [
     {
-      kind: TezosOperationType.TRANSACTION,
+      kind: OpKind.TRANSACTION,
       destination: item.tokenContract,
       amount: "0",
       parameters: {
@@ -105,7 +104,7 @@ function processFa1(
       },
     },
     {
-      kind: TezosOperationType.TRANSACTION,
+      kind: OpKind.TRANSACTION,
       to: item.tokenContract,
       amount: "0",
       parameters: {

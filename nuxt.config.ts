@@ -1,7 +1,22 @@
 import { NodeGlobalsPolyfillPlugin } from "@esbuild-plugins/node-globals-polyfill";
+import { NodeModulesPolyfillPlugin } from "@esbuild-plugins/node-modules-polyfill";
+import rollupNodePolyFill from "rollup-plugin-node-polyfills";
 import { nodePolyfills } from "vite-plugin-node-polyfills";
+import path from "path";
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
+  app: {
+    baseURL: "/Symmetric.Frontend-Tezos/",
+    head: {
+      script: [
+        { innerHTML: "const global = globalThis;" },
+        // {
+        //   type: "module",
+        //   innerHTML: 'import { Buffer } from "buffer"; window.Buffer = Buffer;',
+        // },
+      ],
+    },
+  },
   pages: true,
   tailwindcss: {
     injectPosition: "first",
@@ -39,10 +54,59 @@ export default defineNuxtConfig({
       fontIcons: ["material-icons"],
     },
   },
+  // router: {
+  //   options: {
+  //     strict: true,
+  //   },
+  // },
   vite: {
-    plugins: [nodePolyfills({})],
+    define: {
+      "window.global": {},
+    },
+    build: {
+      target: "esnext",
+      commonjsOptions: {
+        transformMixedEsModules: true,
+      },
+    },
+    resolve: {
+      alias: {
+        // polyfills
+        "readable-stream": "vite-compatible-readable-stream",
+        stream: "vite-compatible-readable-stream",
+        buffer: "rollup-plugin-node-polyfills/polyfills/buffer-es6",
+      },
+    },
+    // optimizeDeps: {
+    //   esbuildOptions: {
+    //     // Node.js global to browser globalThis
+    //     define: {
+    //       global: "globalThis",
+    //     },
+    //     plugins: [
+    //       NodeGlobalsPolyfillPlugin({
+    //         process: true,
+    //         buffer: true,
+    //       }),
+    //       NodeModulesPolyfillPlugin(),
+    //     ],
+    //   },
+    // },
+    // build: {
+    //   rollupOptions: {
+    //     plugins: [
+    //       // Enable rollup polyfills plugin
+    //       // used during production bundling
+    //       rollupNodePolyFill(),
+    //     ],
+    //   },
+    // },
     // resolve: {
     //   alias: {
+    //     // This Rollup aliases are extracted from @esbuild-plugins/node-modules-polyfill,
+    //     // see https://github.com/remorses/esbuild-plugins/blob/master/node-modules-polyfill/src/polyfills.ts
+    //     // process and buffer are excluded because already managed
+    //     // by node-globals-polyfill
     //     util: "rollup-plugin-node-polyfills/polyfills/util",
     //     sys: "util",
     //     events: "rollup-plugin-node-polyfills/polyfills/events",
@@ -72,31 +136,8 @@ export default defineNuxtConfig({
     //     zlib: "rollup-plugin-node-polyfills/polyfills/zlib",
     //     tty: "rollup-plugin-node-polyfills/polyfills/tty",
     //     domain: "rollup-plugin-node-polyfills/polyfills/domain",
-    //   },
-    // },
-    // optimizeDeps: {
-    //   esbuildOptions: {
-    //     define: {
-    //       global: "globalThis",
-    //     },
-    //     plugins: [
-    //       NodeGlobalsPolyfillPlugin({
-    //         process: true,
-    //         buffer: true,
-    //       }),
-    //     ],
-    //   },
-    // },
-    // build: {
-    //   rollupOptions: {
-    //     plugins: [
-    //       // Enable rollup polyfills plugin
-    //       // used during production bundling
-    //       rollupNodePolyFill({
-    //         process: true,
-    //         buffer: true,
-    //       }),
-    //     ],
+    //     buffer: "rollup-plugin-node-polyfills/polyfills/buffer-es6",
+    //     process: "rollup-plugin-node-polyfills/polyfills/process-es6",
     //   },
     // },
   },

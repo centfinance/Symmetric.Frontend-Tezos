@@ -13,7 +13,6 @@ export class PoolRepository extends Repository {
   store(queryResult: GetPoolQuery) {
     const poolTokens: unknown[] = [];
     const pools = queryResult.indexer_pool.map((pool) => {
-      console.log(pool);
       const p = {
         id: pool.id,
         swaps_count: pool.swaps_count,
@@ -45,7 +44,7 @@ export class PoolRepository extends Repository {
           pool_id: token.pool_id,
           pool_token_id: token.pool_token_id,
           FA2: token.token ? token.token.fa2 : false,
-          icon: `/icons/${token.symbol?.toUpperCase()}.png`,
+          icon: `icons/${token.symbol?.toUpperCase()}.png`,
         };
       });
       poolTokens.push(...tokens);

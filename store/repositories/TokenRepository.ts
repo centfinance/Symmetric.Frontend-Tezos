@@ -32,7 +32,6 @@ export class TokenRepository extends Repository {
 
     if (data.value && data.value.indexer_token) {
       const tokens = data.value.indexer_token.map((t) => {
-        console.log(t.id);
         return {
           id: t.id,
           total_swap_count: t.total_swap_count,
@@ -46,7 +45,7 @@ export class TokenRepository extends Repository {
           total_balance_usd: t.total_balance_usd,
           total_volume_notional: t.total_volume_notional,
           total_volume_usd: t.total_volume_usd,
-          icon: `/icons/${t.symbol?.toUpperCase()}.png`,
+          icon: `icons/${t.symbol?.toUpperCase()}.png`,
         };
       });
       this.save(tokens);

@@ -120,7 +120,7 @@ export const useSwap = async (
   const wallet = useRepo(Wallet).all()[0];
   const request = await createSwapRequest(
     tezos,
-    pool.value!,
+    pool,
     tokenIn,
     tokenOut,
     BigNumber(BigNumber(amountIn).toFixed(18)).multipliedBy(10 ** 18),
@@ -132,9 +132,9 @@ export const useSwap = async (
   const operatorCalls = await fa2UpdateOperators(
     tezos,
     wallet!.id,
-    pool.value!.pool_tokens[0].address,
-    [tokenIn.value.token.id],
-    "KT1N5qYdthynXLfGbteRVHgKy4m6q2NGjt57"
+    pool.pool_tokens[0].address,
+    [tokenIn.id],
+    config.contracts.vault
   );
 
   const contractCall: WalletParamsWithKind = {
