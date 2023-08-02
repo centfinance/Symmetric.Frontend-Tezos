@@ -1,13 +1,20 @@
 import { NodeGlobalsPolyfillPlugin } from "@esbuild-plugins/node-globals-polyfill";
 import { NodeModulesPolyfillPlugin } from "@esbuild-plugins/node-modules-polyfill";
+import config from "./config/config";
 import rollupNodePolyFill from "rollup-plugin-node-polyfills";
 import { nodePolyfills } from "vite-plugin-node-polyfills";
-import path from "path";
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   app: {
     baseURL: "/Symmetric.Frontend-Tezos/",
     head: {
+      link: [
+        {
+          rel: "icon",
+          type: "image/vnd.microsoft.icon",
+          href: "favicon.ico",
+        },
+      ],
       script: [
         { innerHTML: "const global = globalThis;" },
         // {
@@ -16,6 +23,9 @@ export default defineNuxtConfig({
         // },
       ],
     },
+  },
+  routeRules: {
+    "": { redirect: "/swap" },
   },
   pages: true,
   tailwindcss: {
@@ -42,7 +52,7 @@ export default defineNuxtConfig({
   apollo: {
     clients: {
       default: {
-        httpEndpoint: "http://35.171.27.49:8080/v1/graphql",
+        httpEndpoint: config.graphQLAPI,
       },
     },
   },
@@ -75,6 +85,7 @@ export default defineNuxtConfig({
         "readable-stream": "vite-compatible-readable-stream",
         stream: "vite-compatible-readable-stream",
         buffer: "rollup-plugin-node-polyfills/polyfills/buffer-es6",
+        util: "rollup-plugin-node-polyfills/polyfills/util",
       },
     },
     // optimizeDeps: {

@@ -1,7 +1,8 @@
 import type { CodegenConfig } from "@graphql-codegen/cli";
+import * as symmConfig from "./config/config";
 
 const config: CodegenConfig = {
-  schema: "http://35.171.27.49:8080/v1/graphql",
+  schema: symmConfig.default.graphQLAPI,
   documents: ["*/*/*.vue", "*/*/*.ts"],
   ignoreNoDocuments: true, // for better experience with the watcher
   generates: {

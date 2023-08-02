@@ -10,7 +10,7 @@
 
     <!-- Middle -->
     <div class="place-self-center">
-      <img src="symm-logo.svg" alt="logo" class="h-16 w-auto" />
+      <img src="~/public/symm-logo.svg" alt="logo" class="h-16 w-auto" />
     </div>
 
     <!-- Right side -->
