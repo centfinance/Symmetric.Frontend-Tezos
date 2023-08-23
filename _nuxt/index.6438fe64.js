@@ -1,0 +1,1 @@
+import{g as e,h as o,i as s,o as n,c as t}from"./entry.98ea8e51.js";const a={class:"p-6"},i=e({__name:"index",setup(c){return o(()=>{s().push("/swap")}),(p,r)=>(n(),t("div",a,"...loading"))}});export{i as default};
