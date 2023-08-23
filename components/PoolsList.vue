@@ -75,6 +75,9 @@
                   </div>
                 </div>
               </q-td>
+              <q-td key="swap_fee" :props="props">
+                {{ props.row.swap_fee }}%
+              </q-td>
               <q-td key="total_liquidity" :props="props">
                 {{ USDollar.format(props.row.total_liquidity) }}
               </q-td>
@@ -120,6 +123,8 @@ const props = defineProps<{
   error?: Error | null;
 }>();
 
+console.log(props.poolsList);
+
 const columns = [
   {
     name: "composition",
@@ -127,6 +132,11 @@ const columns = [
     label: "Composition",
     sortable: false,
     align: "left",
+  },
+  {
+    name: "swap_fee",
+    field: "swap_fee",
+    label: "Swap Fee",
   },
   {
     name: "total_liquidity",

@@ -17,9 +17,9 @@
           @update:model-value="calculatePrice(token.symbol, token.index)"
           :rules="[
             (val: any) => val > 0 || 'No amount entered',
-            (val: any) =>
-              val <= poolTokens[token.index].normalizedBalance() ||
-              'Not enough Balance',
+            (val: any) => {
+              return Number(val) <= Number(poolTokens[token.index].normalizedBalance()) ||
+              'Not enough Balance'}
           ]"
           lazy-rules="ondemand"
         >
@@ -218,33 +218,34 @@ const confirmationRef = ref<any>(null);
 const addLiquidity = async () => {
   loading.value = true;
   try {
-    inputRefs.value.forEach((input, i) => input.value[i].validate());
-    const client = await dappClient().getDAppClient();
-    const account = await client.getActiveAccount();
-    const wallet = useRepo(Wallet).find(account!.address);
+    if (inputRefs.value.every((input, i) => input.value[i].validate())) {
+      const client = await dappClient().getDAppClient();
+      const account = await client.getActiveAccount();
+      const wallet = useRepo(Wallet).find(account!.address);
 
-    const tokens = poolTokens.value!.map((t) => {
-      return {
-        address: t.address,
-        id: t.FA2 ? t.pool_token_id : null,
-        decimals: t.decimals,
-        index: t.index,
-      };
-    });
+      const tokens = poolTokens.value!.map((t) => {
+        return {
+          address: t.address,
+          id: t.FA2 ? t.pool_token_id : null,
+          decimals: t.decimals,
+          index: t.index,
+        };
+      });
 
-    const tx = await useJoinPool(
-      { address: pool.value!.address, id: pool.value!.poolId },
-      amounts.map((a, i) => [i, BigNumber(a.value!)]),
-      tokens,
-      parseInt(wallet?.slippage!) / 100,
-      pool.value!.pool_shares == 0 ? true : false
-    );
-    const hash = tx.opHash;
-    const confirmation = await tx.confirmation();
-    console.log(confirmation);
-    confirmationRef.value = hash;
-    amounts.forEach((a, i) => (amounts[i].value = undefined));
-    useRepo(PoolRepository).fetchPoolData();
+      const tx = await useJoinPool(
+        { address: pool.value!.address, id: pool.value!.poolId },
+        amounts.map((a, i) => [i, BigNumber(a.value!)]),
+        tokens,
+        parseInt(wallet?.slippage!) / 100,
+        pool.value!.pool_shares == 0 ? true : false
+      );
+      const hash = tx.opHash;
+      const confirmation = await tx.confirmation();
+      console.log(confirmation);
+      confirmationRef.value = hash;
+      amounts.forEach((a, i) => (amounts[i].value = undefined));
+      useRepo(PoolRepository).fetchPoolData();
+    }
   } catch (e: any) {
     console.log(e);
   }

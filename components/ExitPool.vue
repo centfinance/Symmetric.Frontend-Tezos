@@ -176,8 +176,13 @@ const estAmounts = computed(() => {
     BigNumber(pool.value?.pool_shares),
     balances.value!
   );
+  const wallet = useRepo(Wallet).all()[0];
+  let slippage = "0.005";
+  if (wallet) {
+    slippage = (Number(wallet.slippage) / 100).toString();
+  }
   return amountsOut.map((a) =>
-    numbro(a.amount).format({
+    numbro(a.amount.minus(a.amount.multipliedBy(slippage))).format({
       average: true,
       totalLength: 6,
     })

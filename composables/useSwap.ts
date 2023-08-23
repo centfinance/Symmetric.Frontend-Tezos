@@ -82,12 +82,13 @@ export const createSwapRequest = async (
       0: tas.address(tokenOut.address),
       1: tas.nat(tokenOut.id),
     },
-    kind: "GIVEN_IN",
+    kind: tas.nat(7),
     poolId: {
       0: tas.address(pool.address),
       1: tas.nat(pool.poolId),
     },
   };
+  console.log(singleSwap);
 
   const vault = await tezos.contract.at(config.contracts.vault);
   console.log(vault);
@@ -128,7 +129,7 @@ export const useSwap = async (
     wallet!.slippage
   );
   const params = request.toTransferParams();
-
+  console.log(params);
   const operatorCalls = await fa2UpdateOperators(
     tezos,
     wallet!.id,

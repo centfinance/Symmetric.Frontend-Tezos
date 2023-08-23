@@ -25,7 +25,7 @@ export default defineNuxtConfig({
     },
   },
   routeRules: {
-    "": { redirect: "/swap" },
+    // "": { redirect: "/swap" },
   },
   pages: true,
   tailwindcss: {

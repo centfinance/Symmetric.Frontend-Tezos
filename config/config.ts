@@ -1,7 +1,7 @@
 export default {
   contracts: {
-    factory: "KT1JWFmM1yRxsGbdwFkakhdC6ThdobmiL5Yj",
-    vault: "KT1MokJei8PpsdFCgvTPnC8zDWkpiryYNvsK",
+    factory: "KT1Ao7sWaDzYeTSPQvctetNotnd6PeGzt9qc",
+    vault: "KT1L6L7n9cq7ExJFDD45PkpPACedufffKRbP",
   },
   rpcNode: "https://rpc.tzkt.io/ghostnet/",
   tzktAPI: "https://api.ghostnet.tzkt.io/",

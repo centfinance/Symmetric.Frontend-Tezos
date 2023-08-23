@@ -46,7 +46,7 @@ export const createExitRequest = async (
       })
     );
 
-    const kind = "EXACT_SPT_IN_FOR_TOKENS_OUT";
+    const kind = tas.nat(5);
 
     const vault = await tezos.wallet.at<VaultWalletType>(
       config.contracts.vault

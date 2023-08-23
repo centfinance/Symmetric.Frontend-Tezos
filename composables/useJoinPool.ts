@@ -2,10 +2,7 @@ import { OpKind, TezosToolkit, WalletParamsWithKind } from "@taquito/taquito";
 import { BigNumber } from "bignumber.js";
 import config from "~/config/config";
 import { tas } from "~/utils/types/type-aliases";
-import { VaultContractType, VaultWalletType } from "~/utils/types/vault.types";
-import { Storage } from "~/utils/types/weighted-pool.types";
-import { Pool } from "~/store/models/Pool";
-import { PoolToken } from "~/store/models/PoolToken";
+import { VaultWalletType } from "~/utils/types/vault.types";
 
 export const createJoinRequest = async (
   tezos: TezosToolkit,
@@ -60,7 +57,7 @@ export const createJoinRequest = async (
       })
     );
 
-    const kind = init ? "INIT" : "EXACT_TOKENS_IN_FOR_SPT_OUT";
+    const kind = init ? tas.nat(0) : tas.nat(1);
 
     const minSPTAmountOut = tas.nat(0);
 
@@ -124,7 +121,7 @@ export const useJoinPool = async (
     init,
     receiver
   );
-
+  console.log(pool, tokens, amounts, slippage, init, receiver);
   const params = request?.toTransferParams();
 
   const wallet = await tezos.wallet.pkh();

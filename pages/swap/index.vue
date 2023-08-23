@@ -100,6 +100,7 @@ import { PoolRepository } from "~/store/repositories/PoolRepository";
 
 useRepo(PoolRepository).fetchPoolData();
 
+console.log(import.meta.url);
 const tokenRepo = useRepo(TokenRepository);
 
 await tokenRepo.fetch();
